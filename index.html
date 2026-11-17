@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Anatomi Jantung AR — Assemblr-style</title>
+<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; overflow: hidden; height: 100%; background: #000; }
+  #hud {
+    position: fixed; left: 12px; right: 12px; bottom: 12px;
+    color: #fff; font: 12px/1.4 monospace;
+    background: rgba(0,0,0,.55); padding: 8px 10px; border-radius: 6px;
+    pointer-events: none; z-index: 10; text-align: center;
+  }
+</style>
+</head>
+<body>
+<div id="hud">Arahkan barcode di buku ke kamera. 1 jari: drag = putar. 2 jari: pinch = zoom, twist = roll, drag = geser.</div>
+
+<a-scene
+  vr-mode-ui="enabled: false"
+  renderer="antialias: true; alpha: true; precision: medium"
+  embedded
+  arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+
+  <a-camera gps-camera="enabled: false" rotation-reader></a-camera>
+
+  <!-- Jantung jadi ANAK dari marker -> otomatis nempel ke barcode di buku.
+       Marker gerak => jantung ikut. Marker keluar frame => jantung hilang bareng marker (kayak Assemblr). -->
+  <a-marker
+    id="marker"
+    type="barcode"
+    value="0"
+    size="0.2"
+    smooth="true"
+    smoothCount="5"
+    smoothTolerance=".01"
+    smoothThreshold="2">
+
+    <!-- Bidang dasar visual di marker (opsional) -->
+    <a-plane rotation="-90 0 0" width="0.2" height="0.2" color="#ffffff" opacity="0.12"></a-plane>
+
+    <!-- Rig interaksi: drag/pinch/twist mengubah transform rig ini, BUKAN posisi marker.
+         Jadi marker tetap stabil, jantung bisa diputer bebas di atasnya. -->
+    <a-entity id="rig" position="0 0.12 0"></a-entity>
+  </a-marker>
+</a-scene>
+
+<script>
+(function () {
+  const scene = document.querySelector('a-scene');
+  const marker = document.querySelector('#marker');
+  const rig = document.querySelector('#rig');
+  const hud = document.getElementById('hud');
+
+  // ---- Model jantung dari primitive (swap ke a-gltf-model kalau punya file .gltf) ----
+  function buildHeart(parent) {
+    const parts = [
+      ['a-sphere', 'position: 0 -0.02 0; scale: 0.6 0.75 0.55; color: #8e1b1b; roughness: 0.6; metalness: 0.1'],
+      ['a-sphere', 'position: 0.35 0.02 -0.05; scale: 0.5 0.6 0.45; color: #a32626; roughness: 0.6'],
+      ['a-sphere', 'position: -0.2 0.5 0.05; scale: 0.42 0.38 0.4; color: #6e1212; roughness: 0.6'],
+      ['a-sphere', 'position: 0.28 0.5 -0.05; scale: 0.4 0.36 0.38; color: #7c1616; roughness: 0.6'],
+      ['a-torus',  'position: 0.05 0.85 0; radius: 0.18; radius-tubular: 0.045; arc: 200; color: #c43a3a'],
+      ['a-cylinder','position: -0.13 0.6 0; radius: 0.045; height: 0.4; color: #c43a3a'],
+      ['a-cylinder','position: 0.25 0.7 -0.1; rotation: 0 0 -20; radius: 0.04; height: 0.35; color: #3a5fc4'],
+      ['a-cylinder','position: 0.42 0.75 -0.05; radius: 0.04; height: 0.3; color: #4a4ac4'],
+      ['a-cylinder','position: 0.42 -0.4 -0.05; radius: 0.045; height: 0.35; color: #4a4ac4'],
+      ['a-torus',  'position: 0 -0.02 0.5; radius: 0.45; radius-tubular: 0.012; arc: 200; color: #e0b040'],
+    ];
+    for (const [tag, attrs] of parts) {
+      const el = document.createElement(tag);
+      for (const pair of attrs.split(';')) {
+        const i = pair.indexOf(':');
+        if (i < 0) continue;
+        const k = pair.slice(0, i).trim();
+        const v = pair.slice(i + 1).trim();
+        if (k && v) el.setAttribute(k, v);
+      }
+      el.classList.add('heart-part');
+      parent.appendChild(el);
+    }
+    const key = document.createElement('a-entity');
+    key.setAttribute('light', 'type: directional; intensity: 0.9; color: #fff');
+    key.setAttribute('position', '1 2 1');
+    parent.appendChild(key);
+    const amb = document.createElement('a-entity');
+    amb.setAttribute('light', 'type: ambient; intensity: 0.6; color: #fff');
+    parent.appendChild(amb);
+  }
+  buildHeart(rig);
+
+  scene.addEventListener('loaded', () => {
+    const canvas = scene.canvas;
+    if (!canvas) return;
+
+    // ---- State interaksi: rotasi penuh 360°, tanpa clamp ----
+    const S = {
+      rotX: 0, rotY: 0, rotZ: 0,
+      scale: 1, panX: 0, panY: 0,
+      dragging: false, lastX: 0, lastY: 0,
+      pointers: new Map(),
+      lastPinch: 0, lastAng: 0, lastMidX: 0, lastMidY: 0,
+    };
+
+    // Quaternion biar rotasi bebas nggak gimbal-lock.
+    const qX = new THREE.Quaternion();
+    const qY = new THREE.Quaternion();
+    const qZ = new THREE.Quaternion();
+    const AX = new THREE.Vector3(1, 0, 0);
+    const AY = new THREE.Vector3(0, 1, 0);
+    const AZ = new THREE.Vector3(0, 0, 1);
+
+    function apply() {
+      qX.setFromAxisAngle(AX, S.rotX * Math.PI / 180);
+      qY.setFromAxisAngle(AY, S.rotY * Math.PI / 180);
+      qZ.setFromAxisAngle(AZ, S.rotZ * Math.PI / 180);
+      rig.object3D.quaternion.copy(qY).multiply(qX).multiply(qZ);
+      rig.object3D.position.set(S.panX, S.panY, 0);
+      rig.object3D.scale.setScalar(S.scale);
+    }
+    apply();
+
+    function pt(e) {
+      const r = canvas.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top, w: r.width };
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      S.pointers.set(e.pointerId, pt(e));
+      if (S.pointers.size === 1) {
+        S.dragging = true; S.lastX = e.clientX; S.lastY = e.clientY;
+      } else if (S.pointers.size === 2) {
+        S.dragging = false;
+        const [a, b] = [...S.pointers.values()];
+        S.lastPinch = Math.hypot(a.x - b.x, a.y - b.y);
+        S.lastAng = Math.atan2(b.y - a.y, b.x - a.x);
+        S.lastMidX = (a.x + b.x) / 2;
+        S.lastMidY = (a.y + b.y) / 2;
+      }
+      canvas.setPointerCapture(e.pointerId);
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (!S.pointers.has(e.pointerId)) return;
+      S.pointers.set(e.pointerId, pt(e));
+
+      if (S.pointers.size === 1 && S.dragging) {
+        const dx = e.clientX - S.lastX;
+        const dy = e.clientY - S.lastY;
+        S.lastX = e.clientX; S.lastY = e.clientY;
+        const k = 720 / Math.max(280, pt(e).w); // 1 layar penuh ~ 720°
+        S.rotY += dx * k; // drag kiri-kanan = sumbu Y (depan <-> belakang)
+        S.rotX += dy * k; // drag atas-bawah  = sumbu X
+        apply();
+      } else if (S.pointers.size === 2) {
+        const [a, b] = [...S.pointers.values()];
+        const d = Math.hypot(a.x - b.x, a.y - b.y);
+        const ang = Math.atan2(b.y - a.y, b.x - a.x);
+        if (S.lastPinch > 0) {
+          const ratio = S.lastPinch / Math.max(1, d);
+          S.scale = Math.max(0.3, Math.min(4, S.scale * ratio));
+          let dAng = ang - S.lastAng;
+          if (dAng > Math.PI) dAng -= 2 * Math.PI;
+          if (dAng < -Math.PI) dAng += 2 * Math.PI;
+          S.rotZ += dAng * 180 / Math.PI;
+          const midX = (a.x + b.x) / 2, midY = (a.y + b.y) / 2;
+          S.panX += (midX - S.lastMidX) * 0.002;
+          S.panY -= (midY - S.lastMidY) * 0.002;
+          S.lastMidX = midX; S.lastMidY = midY;
+          apply();
+        }
+        S.lastPinch = d; S.lastAng = ang;
+      }
+    });
+
+    function up(e) {
+      S.pointers.delete(e.pointerId);
+      if (S.pointers.size < 2) { S.lastPinch = 0; }
+      if (S.pointers.size === 0) S.dragging = false;
+      else if (S.pointers.size === 1) {
+        const [p] = [...S.pointers.values()];
+        S.lastX = p.x; S.lastY = p.y; S.dragging = true;
+      }
+    }
+    canvas.addEventListener('pointerup', up);
+    canvas.addEventListener('pointercancel', up);
+
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      S.scale = Math.max(0.3, Math.min(4, S.scale * (1 + Math.sign(e.deltaY) * 0.1)));
+      apply();
+    }, { passive: false });
+
+    // ---- Deteksi marker keluar frame (info di HUD) ----
+    let lastVisible = null;
+    setInterval(() => {
+      const v = !!(marker.object3D && marker.object3D.visible &&
+        marker.object3D.matrixWorld.elements[0] !== 1);
+      if (v !== lastVisible) {
+        lastVisible = v;
+        hud.textContent = v
+          ? 'Barcode terdeteksi. Drag = putar 360°, pinch = zoom.'
+          : 'Barcode keluar frame. Arahkan barcode di buku ke kamera.';
+      }
+    }, 300);
+  });
+})();
+</script>
+</body>
+</html>
