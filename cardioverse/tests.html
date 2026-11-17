@@ -1,0 +1,164 @@
+﻿<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CardioVerse — Uji Otomatis</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  body { max-width: 820px; margin: 0 auto; padding: 24px 16px; }
+  #out { margin-top: 18px; }
+  .t-case { border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; display: flex; gap: 12px; align-items: flex-start; }
+  .t-case .ic { font-weight: 800; width: 22px; flex: none; }
+  .t-case.pass { border-left: 4px solid var(--teal); }
+  .t-case.fail { border-left: 4px solid var(--danger); }
+  .t-case .det { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+  .t-summary { font-size: 20px; font-weight: 800; }
+</style>
+</head>
+<body>
+  <div class="section-head"><div class="eyebrow">Uji Otomatis</div><h1>CardioVerse — Validasi Data & Alur</h1>
+  <p class="small muted">Menjalankan uji pada data bawaan (pertemuan, soal, esai, kasus, marker) tanpa backend.</p></div>
+
+  <div class="btn-row"><button class="btn btn-primary" id="runBtn" type="button">Jalankan Uji</button>
+  <button class="btn" id="exportBtn" type="button">Ekspor Hasil (JSON)</button></div>
+
+  <div class="t-summary" id="summary" role="status">Belum dijalankan.</div>
+  <div id="out" aria-live="polite"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="data/pertemuan.js"></script>
+  <script src="data/glosarium.js"></script>
+  <script src="data/soal.js"></script>
+  <script src="data/esai.js"></script>
+  <script src="data/kasus.js"></script>
+  <script src="data/marker.js"></script>
+  <script>
+  (function () {
+    var results = [];
+    function add(name, pass, det) {
+      results.push({ name: name, pass: !!pass, det: det || "" });
+    }
+    function render() {
+      var out = document.getElementById("out");
+      var pass = results.filter(function (r) { return r.pass; }).length;
+      var fail = results.filter(function (r) { return !r.pass; }).length;
+      document.getElementById("summary").textContent = "Lulus: " + pass + " · Gagal: " + fail;
+      document.getElementById("summary").style.color = fail === 0 ? "var(--teal)" : "var(--danger)";
+      out.innerHTML = results.map(function (r) {
+        return '<div class="t-case ' + (r.pass ? "pass" : "fail") + '"><span class="ic">' + (r.pass ? "✓" : "✗") + '</span><div><strong>' + r.name + "</strong>" + (r.det ? '<div class="det">' + r.det + "</div>" : "") + "</div></div>";
+      }).join("");
+    }
+    function run() {
+      results = [];
+      var D = window;
+
+      // ---- pertemuan ----
+      var P = D.DATA_PERTEMUAN;
+      add("16 pertemuan tersedia", P && P.length === 16, "ditemukan " + (P ? P.length : 0));
+      var ids = P.map(function (m) { return m.id; }).sort(function (a, b) { return a - b; });
+      add("Id pertemuan 1–16 berurutan", JSON.stringify(ids) === JSON.stringify([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]), ids.join(","));
+      var missing = [];
+      P.forEach(function (m) {
+        ["judul","blok","ringkasan","tujuan","konsep_inti","korelasi_klinis","rangkuman","pertanyaan_penuntun","bacaan"].forEach(function (k) {
+          if (m[k] === undefined) missing.push("P" + m.id + "." + k);
+        });
+      });
+      add("Semua pertemuan punya field wajib", missing.length === 0, missing.join("; "));
+      add("P8 & P16 = label Integrasi", P.filter(function (m) { return m.label_integrasi; }).map(function (m) { return m.id; }).join(",") === "8,16");
+      var noKonsep = P.filter(function (m) { return !m.konsep_inti.length; });
+      add("Setiap pertemuan punya konsep inti", noKonsep.length === 0);
+
+      // ---- soal ----
+      var S = D.DATA_SOAL;
+      add("Tepat 41 soal PG", S.length === 41, "ditemukan " + S.length);
+      var bp = {1:4,2:3,3:4,4:3,5:3,6:3,7:2,9:3,10:3,11:3,12:2,13:2,14:3,15:3};
+      var counts = {};
+      S.forEach(function (s) { counts[s.pertemuan] = (counts[s.pertemuan] || 0) + 1; });
+      var bad = Object.keys(bp).filter(function (k) { return counts[k] !== bp[k]; });
+      add("Blueprint jumlah soal per pertemuan", bad.length === 0, bad.join(",") || "ok");
+      add("P8 & P16 tanpa soal sendiri", (counts[8] || 0) === 0 && (counts[16] || 0) === 0);
+      var badOpts = S.filter(function (s) { return Object.keys(s.opsi).length !== 5; });
+      add("Setiap soal punya 5 opsi", badOpts.length === 0, badOpts.map(function (s) { return "S" + s.id; }).join(","));
+      var badKey = S.filter(function (s) { return !s.opsi[s.kunci]; });
+      add("Kunci soal valid", badKey.length === 0, badKey.map(function (s) { return "S" + s.id; }).join(","));
+      var dupS = new Set(S.map(function (s) { return s.id; })).size;
+      add("Id soal unik", dupS === S.length);
+      var badLv = S.filter(function (s) { return ["C2","C3","C4"].indexOf(s.level) === -1; });
+      add("Level soal valid (C2/C3/C4)", badLv.length === 0, badLv.map(function (s) { return "S" + s.id; }).join(","));
+
+      // ---- esai ----
+      var E = D.DATA_ESAI;
+      add("Tepat 6 esai", E.length === 6, "ditemukan " + E.length);
+      var badEsai = E.filter(function (e) { return !e.pertanyaan || !e.jawaban_model || !e.checklist || !e.checklist.length; });
+      add("Esai punya jawaban model & checklist", badEsai.length === 0);
+
+      // ---- kasus ----
+      var K = D.DATA_KASUS;
+      add("Ada 4 kasus (A/B/C lampiran + D draf)", K.length === 4, K.map(function (k) { return k.id; }).join(","));
+      var noDeadEnd = true, broken = [];
+      K.forEach(function (k) {
+        var ids = new Set(k.halaman.map(function (h) { return h.id; }));
+        k.halaman.forEach(function (h) {
+          (h.pilihan || []).forEach(function (o) {
+            if (!ids.has(o.tujuan)) { noDeadEnd = false; broken.push(k.id + "/" + h.id + "->" + o.tujuan); }
+          });
+        });
+        // setiap halaman keliru/berbahaya/kurang_tepat harus punya tujuan ke 'tepat'
+        var tepat = k.halaman.filter(function (h) { return h.tipe === "tepat"; });
+        if (tepat.length !== 1) { noDeadEnd = false; broken.push(k.id + " tepat-count=" + tepat.length); }
+      });
+      add("Tidak ada tautan rusak / jalan buntu", noDeadEnd, broken.join("; "));
+      var tipeCount = {};
+      K.forEach(function (k) { k.halaman.forEach(function (h) { tipeCount[h.tipe] = (tipeCount[h.tipe] || 0) + 1; }); });
+      add("Halaman evaluasi ada tiap kasus", tipeCount["evaluasi"] >= 3, "evaluasi=" + (tipeCount["evaluasi"] || 0));
+      add("Halaman awal ada tiap kasus", tipeCount["awal"] >= 3, "awal=" + (tipeCount["awal"] || 0));
+      var draf = K.filter(function (k) { return k.status_validasi && k.status_validasi.indexOf("draf") !== -1; });
+      add("Kasus D berstatus draf validasi", draf.length === 1 && draf[0].id === "D");
+
+      // graph reachability
+      (function () {
+        var fail = [];
+        K.forEach(function (k) {
+          var seen = new Set([k.halaman[0].id]);
+          var stack = [k.halaman[0].id];
+          while (stack.length) {
+            var id = stack.pop();
+            var h = k.halaman.find(function (x) { return x.id === id; });
+            (h.pilihan || []).forEach(function (o) {
+              if (o.tujuan && !seen.has(o.tujuan)) { seen.add(o.tujuan); stack.push(o.tujuan); }
+            });
+          }
+          if (seen.size !== k.halaman.length) fail.push(k.id + " unreachable: " + k.halaman.filter(function (h) { return !seen.has(h.id); }).map(function (h) { return h.id; }).join(","));
+        });
+        add("Semua halaman kasus dapat dijangkau", fail.length === 0, fail.join("; "));
+      })();
+
+      // ---- marker ----
+      var M = D.DATA_MARKER;
+      add("Tepat 5 marker", M && M.length === 5, "ditemukan " + (M ? M.length : 0));
+      var dupM = new Set(M.map(function (m) { return m.nilai_barcode; })).size;
+      add("Nilai barcode marker unik", dupM === M.length);
+      var badModel = M.filter(function (m) { return !m.model || !m.nama || !m.deskripsi || !m.lapisan; });
+      add("Marker punya model & lapisan", badModel.length === 0);
+
+      // ---- lampiran ----
+      add("Lampiran rumus & nilai normal ada", D.DATA_LAMPIRAN && D.DATA_LAMPIRAN.rumus && D.DATA_LAMPIRAN.rumus.length >= 10, "rumus=" + (D.DATA_LAMPIRAN && D.DATA_LAMPIRAN.rumus ? D.DATA_LAMPIRAN.rumus.length : 0));
+
+      render();
+    }
+
+    document.getElementById("runBtn").addEventListener("click", run);
+    document.getElementById("exportBtn").addEventListener("click", function () {
+      var blob = new Blob([JSON.stringify(results, null, 2)], { type: "application/json" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "cardioverse_tests.json";
+      document.body.appendChild(a); a.click(); a.remove();
+    });
+    window.addEventListener("DOMContentLoaded", run);
+  })();
+  </script>
+</body>
+</html>

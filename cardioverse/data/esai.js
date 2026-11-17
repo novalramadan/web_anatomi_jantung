@@ -1,0 +1,96 @@
+/* data/esai.js — 6 soal esai penalaran. Sumber: "Fisiologi Jantung – Bank Soal dan Kasus Latihan.docx".
+   checklist = poin jawaban model yang dipecah untuk penilaian diri. */
+window.DATA_ESAI = [
+  {
+    id: 1,
+    pertemuan: [3, 15],
+    pertanyaan: "Seorang pasien kehilangan ± 1,5 L darah. Dua jam kemudian, setelah cairan kristaloid, hematokritnya turun dari 45% menjadi 25%. Analisis dampaknya pada viskositas, resistensi, angka Reynolds, curah jantung, dan hantaran O₂.",
+    jawaban_model: "Hematokrit ↓ → viskositas η ↓ → resistensi (R = 8ηL/πr⁴) ↓ pada r yang sama; Re = ρvD/η ↑ sehingga murmur fungsional dapat terdengar. Venous return ↑ dan simpatis menaikkan HR serta SV sehingga CO ↑ sebagai kompensasi. Hantaran O₂ = CO × kandungan O₂ arteri; kandungan O₂ turun lebih besar daripada kenaikan CO bila anemia berat, sehingga hantaran O₂ tetap menurun. Catatan: pada perdarahan akut hematokrit awal belum turun; penurunan terjadi setelah perpindahan cairan interstisial atau resusitasi cairan.",
+    checklist: [
+      "Menyebut hematokrit turun → viskositas (η) turun.",
+      "Menghubungkan η turun dengan resistensi turun (R = 8ηL/πr⁴) pada jari-jari sama.",
+      "Menyebut Re = ρvD/η naik → aliran turbulen → murmur fungsional.",
+      "Menyebut venous return naik dan simpatis menaikkan HR serta SV sehingga CO naik (kompensasi).",
+      "Menulis hantaran O₂ = CO × kandungan O₂ arteri.",
+      "Menyimpulkan hantaran O₂ tetap menurun bila anemia berat karena kandungan O₂ turun lebih besar daripada kenaikan CO.",
+      "Menyebut catatan waktu: hematokrit awal belum turun pada perdarahan akut; penurunan terjadi setelah perpindahan cairan/resusitasi."
+    ]
+  },
+  {
+    id: 2,
+    pertemuan: [3, 11],
+    pertanyaan: "Bandingkan remodeling ventrikel kiri pada hipertensi kronis dan regurgitasi aorta dengan Hukum Laplace; jelaskan mengapa keduanya dapat berakhir pada gagal jantung.",
+    jawaban_model: "Hipertensi (beban tekanan): P ↑ → σ ↑ → sarkomer paralel → h ↑ (hipertrofi konsentrik) → σ normal kembali; kerugian: dinding kaku (HFpEF), MVO₂ ↑, rasio massa/kapiler ↑ dan iskemia subendokardium. Regurgitasi aorta (beban volume): preload ↑ → r ↑ → sarkomer seri → hipertrofi eksentrik; σ tetap tinggi bila penebalan tidak mengimbangi; dilatasi progresif menurunkan kontraktilitas (HFrEF). Tekanan diastol aorta rendah juga menurunkan perfusi koroner.",
+    checklist: [
+      "Menyebut Hukum Laplace σ = P·r/2h sebagai kerangka analisis.",
+      "Hipertensi = beban tekanan: P ↑ → σ ↑.",
+      "Menyebut respons sarkomer paralel → h ↑ → hipertrofi konsentrik → σ kembali normal.",
+      "Menyebut kerugian hipertrofi konsentrik: dinding kaku (HFpEF), MVO₂ ↑.",
+      "Menyebut rasio massa/kapiler ↑ → iskemia subendokardium.",
+      "Regurgitasi aorta = beban volume: preload ↑ → r ↑ → sarkomer seri → hipertrofi eksentrik.",
+      "Menyebut σ tetap tinggi bila penebalan tidak mengimbangi r.",
+      "Menyimpulkan dilatasi progresif menurunkan kontraktilitas (HFrEF) dan tekanan diastol aorta rendah menurunkan perfusi koroner."
+    ]
+  },
+  {
+    id: 3,
+    pertemuan: [11, 15],
+    pertanyaan: "Jelaskan dengan kurva Frank–Starling dan loop P–V mengapa diuretik dapat meredakan sesak pada HFrEF tanpa menurunkan curah jantung secara bermakna, tetapi berbahaya pada hipovolemia.",
+    jawaban_model: "Pada HFrEF kurva fungsi mendatar di preload tinggi. Penurunan preload (diuresis) menurunkan tekanan kapiler paru sehingga kongesti berkurang, sedangkan SV hampir tidak berubah di bagian mendatar. Pada hipovolemia kurva ada di bagian curam: penurunan preload menurunkan SV dan CO, sehingga hipotensi dan hipoperfusi. Pada loop P–V, penurunan preload menggeser EDV ke kiri; bila ventrikel gagal bekerja di bagian datar kurva fungsinya, SV hampir tidak berubah.",
+    checklist: [
+      "Menyebut kurva fungsi ventrikel pada HFrEF mendatar di preload tinggi.",
+      "Menyebut diuresis menurunkan preload → tekanan kapiler paru turun → kongesti/sesak berkurang.",
+      "Menyebut SV hampir tidak berubah karena bekerja di bagian mendatar kurva.",
+      "Menyebut hipovolemia berada di bagian curam kurva.",
+      "Menyimpulkan pada hipovolemia penurunan preload menurunkan SV dan CO → hipotensi dan hipoperfusi.",
+      "Menggunakan loop P–V: penurunan preload menggeser EDV ke kiri.",
+      "Menyatakan SV hampir tidak berubah bila ventrikel gagal bekerja di bagian datar kurva."
+    ]
+  },
+  {
+    id: 4,
+    pertemuan: [11, 14],
+    pertanyaan: "Seorang pasien stenosis aorta berat dengan arteri koroner normal mengalami angina saat aktivitas. Jelaskan mekanismenya.",
+    jawaban_model: "Kebutuhan O₂ naik (wall stress tinggi, massa miokardium ↑, ejeksi lebih lama), sedangkan suplai terbatas: LVEDP ↑ dan tekanan diastol aorta rendah menurunkan tekanan perfusi koroner, kompresi sistolik oleh dinding tebal, dan kepadatan kapiler relatif ↓. Terjadi iskemia subendokardium walau koroner epikardium normal; latihan memperburuk karena diastol memendek saat HR naik.",
+    checklist: [
+      "Menyebut kebutuhan O₂ naik karena wall stress tinggi.",
+      "Menyebut massa miokardium ↑ dan ejeksi lebih lama menaikkan kebutuhan O₂.",
+      "Menyebut LVEDP ↑ menurunkan tekanan perfusi koroner.",
+      "Menyebut tekanan diastol aorta rendah (akibat stenosis) menurunkan perfusi koroner.",
+      "Menyebut kompresi sistolik oleh dinding tebal dan kepadatan kapiler relatif turun.",
+      "Menyebut iskemia subendokardium walau koroner epikardium normal.",
+      "Menyebut latihan memperburuk karena diastol memendek saat HR naik."
+    ]
+  },
+  {
+    id: 5,
+    pertemuan: [4, 5, 6],
+    pertanyaan: "Mengapa hiperkalemia berat dapat menyebabkan henti jantung? Jelaskan urutan perubahan elektrofisiologi dan EKG, serta dasar terapi darurat dengan kalsium.",
+    jawaban_model: "K⁺ ekstrasel ↑ → E_K dan potensial istirahat kurang negatif → mula-mula eksitabilitas ↑ (lebih dekat ambang) lalu kanal Na⁺ terinaktivasi → dV/dt fase 0 ↓ dan konduksi melambat. EKG: T tinggi runcing (repolarisasi lebih cepat), P mendatar lalu hilang (atrium paling peka), QRS melebar, gelombang sinus, lalu asistol atau VF. Kalsium meningkatkan ambang sehingga menstabilkan membran (tidak menurunkan K⁺), sementara K⁺ diturunkan dengan insulin–glukosa, β₂-agonis, atau ekskresi.",
+    checklist: [
+      "Menyebut K⁺ ekstrasel ↑ → E_K dan potensial istirahat kurang negatif.",
+      "Menyebut eksitabilitas mula-mula ↑ karena lebih dekat ambang.",
+      "Menyebut kanal Na⁺ terinaktivasi → dV/dt fase 0 ↓ → konduksi melambat.",
+      "Urutan EKG: T tinggi runcing lebih dulu.",
+      "Menyebut P mendatar lalu hilang (atrium paling peka).",
+      "Menyebut QRS melebar, gelombang sinus, lalu asistol atau VF.",
+      "Menyebut kalsium menaikkan ambang/menstabilkan membran, bukan menurunkan K⁺.",
+      "Menyebut penurunan K⁺ lewat insulin–glukosa, β₂-agonis, atau ekskresi."
+    ]
+  },
+  {
+    id: 6,
+    pertemuan: [12, 15],
+    pertanyaan: "Dengan kurva Guyton, jelaskan perubahan curah jantung dan tekanan atrium kanan pada (a) perdarahan, (b) latihan aerobik, (c) gagal jantung sistolik.",
+    jawaban_model: "(a) Pmsf turun → kurva VR bergeser ke kiri/bawah → titik keseimbangan baru dengan CO ↓ dan RAP ↓. (b) Vasodilatasi otot menurunkan resistensi vena sistemik–arteri sehingga kurva VR berputar naik; ditambah venokonstriksi (Pmsf ↑) dan inotropik ↑ menggeser kurva jantung naik → CO ↑↑ dengan RAP relatif tetap/↓. (c) Kurva jantung turun → CO ↓ dan RAP ↑; retensi cairan menaikkan Pmsf sehingga mempertahankan CO sebagian, dengan harga kongesti.",
+    checklist: [
+      "(a) Menyebut Pmsf turun → kurva VR bergeser ke kiri/bawah.",
+      "(a) Menyimpulkan CO ↓ dan RAP ↓.",
+      "(b) Menyebut vasodilatasi otot menurunkan resistensi → kurva VR berputar naik.",
+      "(b) Menyebut venokonstriksi (Pmsf ↑) dan inotropik ↑ menggeser kurva jantung naik.",
+      "(b) Menyimpulkan CO ↑↑ dengan RAP relatif tetap/↓.",
+      "(c) Menyebut kurva jantung turun → CO ↓ dan RAP ↑.",
+      "(c) Menyebut retensi cairan menaikkan Pmsf sehingga mempertahankan CO sebagian, dengan harga kongesti."
+    ]
+  }
+];

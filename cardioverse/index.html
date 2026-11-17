@@ -1,0 +1,61 @@
+﻿<!doctype html>
+<html lang="id" data-theme="terang">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CardioVerse - Fisiologi Jantung</title>
+  <meta name="description" content="Media belajar interaktif Fisiologi Jantung: materi, kuis, visual novel, dan AR Scanner.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/vn.css">
+  <link rel="stylesheet" href="css/ar.css">
+</head>
+<body>
+  <a class="skip" href="#app">Lewati ke konten</a>
+  <header class="topbar">
+    <a class="brand" href="#/beranda" aria-label="Beranda CardioVerse">
+      <img id="brandLogo" src="" alt="" width="32" height="32">
+      <span id="brandName">CardioVerse</span>
+    </a>
+    <nav class="mainnav" aria-label="Navigasi utama">
+      <a href="#/materi" data-nav="materi">Materi</a>
+      <a href="#/kuis" data-nav="kuis">Kuis</a>
+      <a href="#/vn" data-nav="vn">Visual Novel</a>
+      <a href="#/ar" data-nav="ar">AR Scanner</a>
+      <a href="#/profil" data-nav="profil">Profil</a>
+      <a href="#/admin" data-nav="admin" id="navAdmin" hidden>Admin</a>
+      <a href="#/login" data-nav="login" id="navLogin">Masuk</a>
+      <button type="button" class="btn btn-sm" id="navLogout" hidden>Keluar</button>
+    </nav>
+  </header>
+
+  <main id="app" tabindex="-1" aria-live="polite"></main>
+
+  <footer class="footer">
+    <p class="disclaimer" id="disclaimer"></p>
+    <p class="muted"><span id="footInstitusi"></span> &middot; <span id="footDosen"></span></p>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="data/pertemuan.js"></script>
+  <script src="data/glosarium.js"></script>
+  <script src="data/soal.js"></script>
+  <script src="data/esai.js"></script>
+  <script src="data/kasus.js"></script>
+  <script src="data/marker.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/home.js"></script>
+  <script src="js/materi.js"></script>
+  <script src="js/kuis.js"></script>
+  <script src="js/vn.js"></script>
+  <script src="js/ar.js"></script>
+  <script src="js/profil.js"></script>
+  <script src="assets/lib/three.min.js"></script>
+  <script src="assets/lib/GLTFLoader.js"></script>
+  <script src="assets/lib/jsQR.js"></script>
+  <script src="assets/lib/qrcodegen.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/login.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

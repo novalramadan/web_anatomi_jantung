@@ -1,0 +1,191 @@
+﻿/* css/ar.css — AR Scanner */
+.ar-shell {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: #000;
+  min-height: 420px;
+}
+.ar-video-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 72vh;
+  background: #000;
+  overflow: hidden;
+  isolation: isolate;
+}
+.ar-video-wrap > video,
+.ar-video-wrap > canvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+#glbCanvas {
+  z-index: 3;
+  pointer-events: auto;
+}
+#camVideo { z-index: 1; }
+.ar-frame, .ar-status, .ar-camswitch { z-index: 4; }
+
+/* saat model tampil: panel info jadi kartu kecil di bawah-kiri, model bebas di tengah */
+.ar-shell.with-model .ar-info {
+  width: min(340px, 60%);
+  bottom: 12px;
+  left: 12px;
+  right: auto;
+  transform: translateY(0);
+  border-radius: var(--r);
+  border: 1px solid var(--line-2);
+}
+.ar-shell.with-model .ar-info.show { transform: translateY(0); }
+.ar-shell.with-model .ar-frame,
+.ar-shell.with-model .ar-camswitch { opacity: .3; }
+
+/* switch kamera depan/belakang */
+.ar-camswitch {
+  position: absolute;
+  top: 50px;
+  right: 12px;
+  z-index: 5;
+}
+.ar-video-wrap video, .ar-video-wrap canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ar-frame {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.ar-frame::before, .ar-frame::after {
+  content: "";
+  position: absolute;
+  width: 44px; height: 44px;
+  border: 3px solid var(--teal);
+}
+.ar-frame::before { top: 14px; left: 14px; border-right: 0; border-bottom: 0; border-radius: 8px 0 0 0; }
+.ar-frame::after { bottom: 14px; right: 14px; border-left: 0; border-top: 0; border-radius: 0 0 8px 0; }
+.ar-frame .corner-br { position: absolute; bottom: 14px; left: 14px; width: 44px; height: 44px; border-top: 3px solid var(--teal); border-right: 3px solid var(--teal); border-radius: 0 0 0 8px; }
+.ar-frame .corner-tr { position: absolute; top: 14px; right: 14px; width: 44px; height: 44px; border-bottom: 3px solid var(--teal); border-left: 3px solid var(--teal); border-radius: 0 8px 0 0; }
+.ar-status {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(5, 10, 18, .78);
+  border: 1px solid var(--line-2);
+  color: var(--text);
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+.ar-status.found { border-color: var(--teal); color: var(--teal); }
+.ar-status.err { border-color: var(--danger); color: #ff9c9c; }
+
+.ar-info {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  z-index: 8;
+  background: linear-gradient(180deg, rgba(8, 12, 22, .82), rgba(8, 12, 22, .97));
+  border-top: 1px solid var(--line-2);
+  padding: 14px clamp(12px, 2.4vw, 20px);
+  transform: translateY(105%);
+  transition: transform .35s cubic-bezier(.2, .8, .2, 1);
+  max-height: 62%;
+  overflow-y: auto;
+}
+.ar-info.show { transform: translateY(0); }
+.ar-info h3 { margin: 0 0 6px; color: var(--teal); }
+.ar-info .lap { margin: 10px 0; }
+.ar-info .lap .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  margin: 0 6px 6px 0;
+  border-radius: 999px;
+  border: 1px solid var(--line-2);
+  background: var(--panel-2);
+  font-size: .82rem;
+  font-weight: 650;
+  cursor: pointer;
+  color: var(--text-2);
+}
+.ar-info .lap .chip[aria-pressed="true"] { border-color: var(--teal); color: var(--teal); background: var(--teal-dim); }
+
+.ar-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.ar-slider { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: .84rem; color: var(--text-2); }
+.ar-slider input { flex: 1; }
+
+.ar-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.ar-tabs .btn[aria-pressed="true"] { border-color: var(--teal); color: var(--teal); background: var(--teal-dim); }
+
+.model-list { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.model-item {
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--panel);
+  padding: 14px;
+  cursor: pointer;
+  color: var(--text);
+  font: inherit;
+  transition: border-color .15s, transform .15s;
+}
+.model-item:hover { border-color: var(--teal); transform: translateY(-2px); }
+.model-item.cur { border-color: var(--teal); background: var(--teal-dim); }
+.model-item .no { font-family: var(--mono); font-size: .74rem; color: var(--text-3); }
+.model-item h4 { margin: 4px 0 2px; font-size: .95rem; }
+
+.viewer3d {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: radial-gradient(120% 100% at 50% 0%, #101a2c 0%, #060a12 100%);
+  overflow: hidden;
+}
+.viewer3d canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.viewer3d .hint3d {
+  position: absolute;
+  left: 10px; bottom: 10px;
+  font-size: .72rem;
+  color: var(--text-3);
+  background: rgba(5, 10, 18, .7);
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.marker-print { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.marker-cell {
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: #fff;
+  color: #101828;
+  padding: 14px;
+  text-align: center;
+}
+.marker-cell canvas { width: 100%; max-width: 220px; height: auto; image-rendering: pixelated; }
+.marker-cell .nm { font-weight: 750; margin-top: 8px; }
+.marker-cell .id { font-family: var(--mono); font-size: .78rem; color: #475467; }
+
+.ar-fallback {
+  border: 1px dashed var(--amber);
+  background: color-mix(in srgb, var(--amber) 8%, var(--panel));
+  border-radius: var(--r);
+  padding: 18px;
+  font-size: .92rem;
+}
+
+@media (max-width: 640px) {
+  .ar-video-wrap { aspect-ratio: 3 / 4; }
+}
