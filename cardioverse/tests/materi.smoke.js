@@ -22,13 +22,14 @@ global.DATA_LAMPIRAN = {
 };
 const storageState = { materi_selesai: [1], skor_kuis: { 1: { persen: 80 } } };
 global.Storage = { load: () => JSON.parse(JSON.stringify(storageState)), update: (fn) => fn(storageState) };
-global.document = { getElementById: () => null, querySelectorAll: () => [], createElement: () => ({ style: {}, set className(v) {}, set innerHTML(v) {}, appendChild() {}, addEventListener() {}, focus() {}, remove() {} }), body: { appendChild() {} }, addEventListener() {} };
+global.document = { getElementById: () => null, querySelectorAll: () => [], createElement: () => ({ style: {}, set className(v) {}, set innerHTML(v) {}, appendChild() {}, addEventListener() {}, focus() {}, remove() {} }), body: { appendChild() {} }, addEventListener() {}, removeEventListener() {} };
 global.location = { hash: "" };
 
 global.App = {
   escapeHtml: (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])),
   byId: (list, id) => list.find(x => x.id === id) || null,
   toast: () => {},
+  pct: (a, b) => (b ? Math.round((a / b) * 100) : 0),
   _handlers: {},
   add: (name, fn) => { global.App._handlers[name] = fn; }
 };
@@ -39,44 +40,40 @@ const handler = global.App._handlers.materi;
 if (typeof handler !== "function") throw new Error("handler 'materi' tidak terdaftar");
 let captured = "";
 const fakeApp = { set innerHTML(v) { captured = v; }, get innerHTML() { return captured; } };
-handler(fakeApp, ["1"]);
+// ---- render katalog (#/materi) dan pelajaran per langkah (#/materi/1/N) ----
+handler(fakeApp, []);
+const catalog = captured;
+handler(fakeApp, ["1", "0"]);
+const lesson0 = captured;
+handler(fakeApp, ["1", "1"]);
+const lesson1 = captured;
+handler(fakeApp, ["1", "4"]);
+const lessonLast = captured;
+handler(fakeApp, ["1", "2"]);
+const lesson2 = captured;
+handler(fakeApp, ["1", "3"]);
+const lesson3 = captured;
+captured = [lesson0, lesson1, lesson2, lesson3, lessonLast, catalog].join("\n");
 
-// ---- kontrak struktur & konten (markup Tailwind baru) ----
 const must = [
-  // layout reader (grid 2 kolom: toc + artikel)
-  'lg:grid-cols-[260px_minmax(0,1fr)]',
-  '<aside class="toc',
-  '<article',
-  // header
-  'Jantung Sebagai Pompa</h1>',
-  '<span class="badge">Fondasi</span>',
-  '<span class="badge">1 tujuan</span>',
-  '<span class="badge">2 tujuan belajar</span>',
-  // sections
-  'id="tujuan"', 'id="konsep"', 'id="klinis"', 'id="rangkuman"', 'id="pertanyaan"', 'id="bacaan"',
-  'Tujuan Pembelajaran</h2>',
-  'Konsep Inti</h2>',
-  'Korelasi Klinis</h2>',
-  'Rangkuman</h2>',
-  'Bacaan</h2>',
-  // konten
-  'ringkasan 1', 't1', 't2', 'isi a', 'k1', 'r1', 'q1', 'bacaan 1',
-  // callout
-  'class="callout c-red"', 'class="callout c-teal"',
-  // accordion
-  '<details class="acc',
-  'q1</li>',
-  // footer
-  'id="markDone"',
-  'Materi Selesai',
-  '<a class="btn" href="#/kuis/1">Mulai Kuis Pertemuan Ini</a>',
-  'Lulus 80%',
-  // pager
-  'aria-label="Navigasi materi"',
-  'href="#/materi/2"',
-  'Siklus Jantung',
-  // toc
-  'id="openAppendix"', 'id="materiSearch"',
+  // katalog kursus
+  'class="cs-banner"', 'Fisiologi Jantung', 'class="cs-course"', 'href="#/materi/1"', 'href="#/materi/2"',
+  'id="materiSearch"', 'id="openAppendix"', 'data-search="',
+  // pemutar pelajaran: layout 2 kolom, sidebar, artikel
+  'lg:grid-cols-[260px_minmax(0,1fr)]', '<aside class="toc', '<article',
+  'Jantung Sebagai Pompa</h1>', '<span class="badge">Fondasi</span>',
+  // stepper + langkah
+  'aria-label="Langkah pelajaran"', 'aria-current="step"',
+  'id="tujuan"', 'data-obj="0"', 'ringkasan 1', 't1', 't2',
+  'id="konsep"', 'isi a',
+  'id="klinis"', 'Korelasi Klinis</h2>', 'class="callout c-red"', 'k1',
+  'id="rangkuman"', 'class="callout c-teal"', 'r1',
+  'id="pertanyaan"', 'data-note="0"', 'q1', '<details class="acc',
+  'id="bacaan"', 'bacaan 1',
+  // footer pelajaran
+  'id="markDone"', 'Materi Selesai', '<a class="btn" href="#/kuis/1">Mulai Kuis Pertemuan Ini</a>', 'Lulus 80%',
+  'aria-label="Navigasi materi"', 'Siklus Jantung',
+  'class="cs-lessonnav"',
 ];
 
 let fail = 0;

@@ -1,5 +1,5 @@
-// tests/kuis.smoke.js — verifikasi layout kuis split-screen (media kiri + konten kanan)
-// sesuai referensi, tanpa menjalankan timer/state penuh.
+// tests/kuis.smoke.js — verifikasi layout kuis Modern Healthcare (sage/cream split-screen)
+// tanpa menjalankan timer/state penuh.
 const fs = require("fs");
 const path = require("path");
 const root = path.join(__dirname, "..");
@@ -56,31 +56,39 @@ const fakeApp = {
 };
 handler(fakeApp, ["p", "1"]);
 
-// — struktur split-screen —
+// — struktur split-screen — 
+ok(captured.includes('class="quiz-wrap"'), "container quiz-wrap ada");
 ok(captured.includes('class="quiz-split"'), "container quiz-split ada");
 ok(captured.includes('class="quiz-media"'), "panel media kiri ada");
 ok(captured.includes('class="quiz-content"'), "panel konten kanan ada");
 
-// — panel kiri: charcoal + placeholder + caption —
+// — panel kiri: sage + floating badge + gambar + caption —
 ok(captured.includes('id="quitQuiz"'), "tombol kembali (quitQuiz) ada");
-ok(captured.includes('← Daftar Kuis'), "label tombol kembali sesuai");
+ok(captured.includes('← Kembali ke Modul'), "label tombol kembali sesuai");
+ok(captured.includes('class="quiz-badge"'), "floating badge ilustrasi ada");
+ok(captured.includes('Ilustrasi Soal #01'), "badge memuat nomor soal");
 ok(captured.includes('class="quiz-img-stage"'), "panggung gambar ada");
 ok(captured.includes('src="assets/img/Sick.jpg"'), "gambar soal dirender (fallback sementara)");
 ok(captured.includes('class="quiz-caption"'), "caption gambar ada");
 
-// — panel kanan: eyebrow teal + stepper + opsi vertikal + tombol utama —
-ok(captured.includes('class="quiz-eyebrow"'), "eyebrow kategori ada");
-ok(captured.includes('Kuis P1 · C2'), "eyebrow berisi kategori & level");
-ok(captured.includes('class="quiz-stepper"'), "stepper progres ada");
-ok((captured.match(/class="quiz-seg/g) || []).length === 1, "stepper punya 1 segmen (1 soal)");
-ok((captured.match(/class="quiz-seg on"/g) || []).length === 1, "segmen aktif berwarna on");
+// — header atas + progress bar —
+ok(captured.includes('class="quiz-head-bar"'), "header atas ada");
+ok(captured.includes('class="quiz-title-bar"'), "judul kuis di header ada");
+ok(captured.includes('class="quiz-progress"'), "progress bar ada");
+
+// — panel kanan: pill eyebrow + opsi vertikal + navigasi kapsul —
+ok(captured.includes('class="quiz-eyebrow"'), "pill eyebrow ada");
+ok(captured.includes('Pertanyaan 1 dari 1'), "pill eyebrow memuat nomor pertanyaan");
+ok((captured.match(/class="quiz-dot[ "]/g) || []).length === 1, "bulatan navigasi memuat 1 soal");
 ok(captured.includes('Pertemuan 1 · Pengantar Sistem Kardiovaskular'), "subjudul topik dirender");
 ok(captured.includes('class="quiz-options"'), "wadah opsi ada");
 ok((captured.match(/class="quiz-opt"/g) || []).length === 5, "lima opsi jawaban");
 ok(captured.includes('class="quiz-opt-key"'), "key opsi hadir");
+ok(captured.includes('class="quiz-btn-ghost"'), "tombol Sebelumnya (kapsul ghost) ada");
+ok(captured.includes('Sebelumnya'), "label tombol Sebelumnya");
 ok(captured.includes('class="quiz-btn-primary"'), "tombol utama ada");
-// hanya 1 soal → isLast=true → tombol jadi "Lihat Hasil ▸" (bukan "Lanjut ▸")
-ok(captured.includes('Lihat Hasil ▸'), "label tombol utama sesuai posisi terakhir");
+// hanya 1 soal → isLast=true → tombol jadi "Selesai Kuis ✓" (bukan "Selanjutnya →")
+ok(captured.includes('Selesai Kuis'), "label tombol utama sesuai posisi terakhir");
 
 // — tidak boleh ada elemen usang —
 for (const legacy of ['class="bar lg mt-3"', 'Soal 1 dari 1', 'class="btn btn-lg justify-start"', 'quiz-imgpanel']) {

@@ -148,7 +148,7 @@ ok(idx.includes("cdn.tailwindcss.com"), "index.html memuat Tailwind CDN");
 ok(idx.includes("tailwind.config"), "index.html punya tailwind.config");
 ok(idx.includes("Plus+Jakarta+Sans"), "index.html memuat Plus Jakarta Sans");
 ok(idx.includes("JetBrains+Mono"), "index.html memuat JetBrains Mono");
-ok(idx.includes("--brand:#0E9F8F") || idx.includes("--brand:        #0E9F8F"), "palet brand teal terpasang");
+ok(idx.includes("--brand:        #0F4D3A"), "palet brand hijau terpasang");
 // urutan script penting (config sebelum modul, app sebelum halaman)
 const order = ["js/config.js", "js/storage.js", "js/app.js", "js/home.js", "js/materi.js", "js/kuis.js", "js/vn.js", "js/ar.js", "js/profil.js", "js/auth.js", "js/login.js", "js/admin.js"];
 let lastIdx = -1, orderOk = true;

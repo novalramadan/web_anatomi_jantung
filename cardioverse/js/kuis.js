@@ -34,13 +34,13 @@
     html += '<div class="grid gap-4 lg:grid-cols-2">';
 
     // kuis pertemuan
-    html += '<div class="surface-card p-5"><div class="mb-3"><h2 class="m-0">Kuis per Pertemuan</h2></div><div class="grid gap-2">';
+    html += '<div class="surface-card min-w-0 p-5"><div class="mb-3"><h2 class="m-0">Kuis per Pertemuan</h2></div><div class="grid gap-2">';
     window.DATA_PERTEMUAN.forEach(function (m) {
       var n = soalForPertemuan(m.id).length;
       var isInt = m.label_integrasi;
       var best = p.skor_kuis[m.id];
       var badge = best ? '<span class="badge ' + (best.persen >= window.CONFIG.ambangLulus * 100 ? 'badge-success' : 'badge-warn') + '">Terbaik ' + best.persen + '%</span>' : '';
-      html += '<a class="btn btn-block justify-between" href="#/kuis/p/' + m.id + '"><span>' + (isInt ? '<span class="badge badge-warn mr-1">Integrasi</span> ' : '') + 'P' + m.id + ' · ' + App.escapeHtml(m.judul) + '</span><span class="small dim">' + (isInt ? '10 soal acak' : n + ' soal') + ' ' + badge + '</span></a>';
+      html += '<a class="qrow" href="#/kuis/p/' + m.id + '"><span class="qn">P' + m.id + '</span><span class="qt">' + (isInt ? '<span class="badge badge-warn mr-1.5">Integrasi</span>' : '') + App.escapeHtml(m.judul) + '</span><span class="qm"><span class="small dim">' + (isInt ? '10 soal acak' : n + ' soal') + '</span>' + badge + '</span></a>';
     });
     html += '</div></div>';
 
@@ -101,9 +101,8 @@
 
     var m = App.byId(window.DATA_PERTEMUAN, s.pertemuan);
     var subTitle = m ? m.judul : "";
-    var eyebrow = "Kuis P" + s.pertemuan + (s.level ? " · " + s.level : "");
 
-    // —— panel kiri: media (charcoal) ——
+    // —— panel kiri: media (sage) ——
     var imgSrc = s.gambar || (typeof GAMBAR_SEMENTARA !== "undefined" ? GAMBAR_SEMENTARA : null);
     var imgCaption = s.keteranganGambar || (imgSrc === GAMBAR_SEMENTARA ? "Gambar pendukung (pratinjau)" : "Gambar pendukung soal");
 
@@ -115,23 +114,25 @@
         + '<p>Ilustrasi untuk soal ini belum tersedia.</p></div>';
     }
 
+    var numberLabel = (state.idx + 1) < 10 ? "0" + (state.idx + 1) : String(state.idx + 1);
     var mediaHtml = '<aside class="quiz-media">' +
-      '<button type="button" class="quiz-back" id="quitQuiz">← Daftar Kuis</button>' +
+      '<span class="quiz-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>Ilustrasi Soal #' + numberLabel + '</span>' +
       '<div class="quiz-img-stage">' + imageStage() + '</div>' +
-      '<p class="quiz-caption">' + App.escapeHtml(imgCaption) + '</p>' +
+      (imgCaption ? '<p class="quiz-caption">' + App.escapeHtml(imgCaption) + '</p>' : '') +
       '</aside>';
 
-    // —— panel kanan: konten (putih) ——
-    // stepper progres: segmen per soal, aktif/done teal, upcoming abu-abu
-    var segs = "";
-    for (var si = 0; si < state.soal.length; si++) {
-      segs += '<span class="quiz-seg' + (si <= state.idx ? " on" : "") + '"></span>';
-    }
-
-    var headRight = '<div class="quiz-actions">' +
-      (state.mode === "ujian" ? '<span class="badge badge-warn" id="timerBadge" aria-live="off">&#9201; ' + state.sisa + 's</span>' : '') +
-      '<div class="quiz-stepper" role="progressbar" aria-label="Progres soal" aria-valuenow="' + (state.idx + 1) + '" aria-valuemin="1" aria-valuemax="' + state.soal.length + '">' + segs + '</div>' +
+    // —— header atas: kembali, judul, timer ——
+    var headerBar = '<div class="quiz-head-bar">' +
+      '<div class="quiz-head-left">' +
+      '<button type="button" class="quiz-back" id="quitQuiz">← Kembali ke Modul</button>' +
+      (state.judul ? '<h2 class="quiz-title-bar">' + App.escapeHtml(state.judul) + '</h2>' : '') +
+      '</div>' +
+      (state.mode === "ujian" ? '<span class="quiz-timer" id="timerBadge" aria-live="off">&#9201; ' + state.sisa + 's</span>' : '') +
       '</div>';
+
+    // —— progress bar ——
+    var pct = App.pct(state.idx + 1, state.soal.length);
+    var progressBar = '<div class="quiz-progress" role="progressbar" aria-label="Progres soal" aria-valuenow="' + (state.idx + 1) + '" aria-valuemin="1" aria-valuemax="' + state.soal.length + '"><i style="width:' + pct + '%"></i></div>';
 
     var optHtml = '<div class="quiz-options">';
     letters.forEach(function (L) {
@@ -143,7 +144,7 @@
       if (answered) {
         disabled = " disabled";
         if (isKey) cls += " is-correct";
-        else if (chosen) cls += " is-wrong";
+        else if (chosen) cls += (state.mode === "ujian" ? " is-selected" : " is-wrong");
       }
       optHtml += '<button type="button" class="' + cls + '" data-opt="' + L + '"' + disabled + '><span class="quiz-opt-key">' + L + '</span><span class="quiz-opt-text">' + App.escapeHtml(s.opsi[L]) + '</span></button>';
     });
@@ -157,15 +158,23 @@
       feedbackHtml = '<p class="small dim mt-5">Jawaban terkunci. Pembahasan tampil di akhir sesi.</p>';
     }
 
-    var nextLabel = isLast ? "Lihat Hasil ▸" : "Lanjut ▸";
+    var nextLabel = isLast ? "Selesai Kuis" : "Selanjutnya";
+    var nextIcon = isLast ? "&#10003;" : "&#8594;";
+    // bulatan nomor soal: hijau tua = sudah dijawab, ring = soal aktif
+    var dots = "";
+    for (var di = 0; di < state.soal.length; di++) {
+      var dcls = "quiz-dot" + (state.jawaban[di] ? " done" : "") + (di === state.idx ? " now" : "");
+      dots += '<span class="' + dcls + '" title="Soal ' + (di + 1) + '"></span>';
+    }
     var footHtml = '<footer class="quiz-foot">' +
-      '<button class="quiz-btn-primary" id="nextBtn" type="button">' + nextLabel + '</button>' +
+      '<button class="quiz-btn-ghost" id="prevBtn" type="button"' + (state.idx === 0 ? " disabled" : "") + '>&#8592; Sebelumnya</button>' +
+      '<div class="quiz-dots" aria-hidden="true">' + dots + '</div>' +
+      '<button class="quiz-btn-primary" id="nextBtn" type="button">' + nextLabel + ' ' + nextIcon + '</button>' +
       '</footer>';
 
     var contentHtml = '<section class="quiz-content">' +
       '<header class="quiz-head">' +
-        headRight +
-        '<div class="quiz-eyebrow">' + eyebrow + '</div>' +
+        '<div class="quiz-eyebrow">Pertanyaan ' + (state.idx + 1) + ' dari ' + state.soal.length + (s.level ? ' · ' + s.level : '') + '</div>' +
         '<h1 class="quiz-title">' + App.escapeHtml(s.pertanyaan) + '</h1>' +
         (subTitle ? '<div class="quiz-subtitle">Pertemuan ' + s.pertemuan + ' · ' + App.escapeHtml(subTitle) + '</div>' : '') +
       '</header>' +
@@ -174,7 +183,7 @@
       footHtml +
       '</section>';
 
-    var html = '<div class="quiz-split">' + mediaHtml + contentHtml + '</div>';
+    var html = '<div class="quiz-wrap">' + headerBar + progressBar + '<div class="quiz-split">' + mediaHtml + contentHtml + '</div></div>';
 
     app.innerHTML = html;
 
@@ -186,6 +195,10 @@
       state.idx++;
       if (state.idx >= state.soal.length) renderResult(app);
       else renderSoal(app);
+    });
+    var pb = document.getElementById("prevBtn");
+    if (pb) pb.addEventListener("click", function () {
+      if (state.idx > 0) { state.idx--; renderSoal(app); }
     });
     var qb = document.getElementById("quitQuiz");
     if (qb) qb.addEventListener("click", function () {
@@ -245,7 +258,7 @@
     var b = document.getElementById("timerBadge");
     if (b) {
       b.innerHTML = "&#9201; " + Math.max(0, state.sisa) + "s";
-      if (state.sisa <= 10) { b.classList.remove("badge-warn"); b.classList.add("badge-danger"); }
+      if (state.sisa <= 10) { b.classList.add("is-danger"); }
     }
   }
 
