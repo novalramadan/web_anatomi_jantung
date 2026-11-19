@@ -6,9 +6,8 @@
   var video = null, stream = null, scanTimer = null;
   var renderer = null, scene3d = null, camera3d = null, model3d = null, gltfLoader = null;
   var glbCache = {};
-  var rotX = 0, rotY = 0, dist = 4, dragging = false, lastX = 0, lastY = 0;
   var camFacing = "environment";
-  var gizmo = null;
+  var ctrl = null;
   var gen3d = 0;
 
   // ============================================================
@@ -30,9 +29,11 @@
       '<button class="btn btn-sm ar-camswitch" id="camSwitch" type="button" title="Ganti kamera">&#128247; Ganti</button>' +
       '<canvas id="glbCanvas"></canvas>' +
       '<div class="flex gap-1 absolute top-3 right-3 z-10" id="gzBar">' +
-      '<button class="btn btn-sm" id="gzMove" type="button" aria-pressed="true">Geser</button>' +
-      '<button class="btn btn-sm" id="gzRot" type="button" aria-pressed="false">Putar</button>' +
+      '<button class="btn btn-sm" id="gzReset" type="button" title="Posisi awal">↺ Reset</button>' +
+      '<button class="btn btn-sm" id="gzZoomIn" type="button" title="Perbesar">+</button>' +
+      '<button class="btn btn-sm" id="gzZoomOut" type="button" title="Perkecil">−</button>' +
       '</div>' +
+      '<div id="gzPanel" class="absolute right-3 z-10" style="top:3.2rem"></div>' +
       '</div>' +
       '<div id="arFallback" class="ar-fallback hidden">Kamera tidak tersedia. Gunakan Mode 3D Tanpa Kamera.</div>' +
       '<div id="arInfo" class="ar-info"><div id="arInfoBody"></div></div>' +
@@ -42,21 +43,8 @@
     document.getElementById("tab3d").addEventListener("click", function () { switchTab(app, "3d"); });
     // init Three.js overlay SEKARANG agar canvas sudah berukuran saat QR ditemukan
     setTimeout(function () { ensure3D(); startCamera(); }, 60);
-    // toolbar mode gizmo
-    var gzMove = document.getElementById("gzMove");
-    var gzRot = document.getElementById("gzRot");
-    if (gzMove && gzRot) {
-      gzMove.addEventListener("click", function () {
-        if (gizmo) gizmo.setMode("translate");
-        gzMove.setAttribute("aria-pressed", "true");
-        gzRot.setAttribute("aria-pressed", "false");
-      });
-      gzRot.addEventListener("click", function () {
-        if (gizmo) gizmo.setMode("rotate");
-        gzRot.setAttribute("aria-pressed", "true");
-        gzMove.setAttribute("aria-pressed", "false");
-      });
-    }
+    // panel kontrol (Reset / Zoom) aktif segera; geser & putar menyusul saat model terpasang
+    bindPanelBar();
   }
 
   function switchTab(app, mode) {
@@ -165,38 +153,30 @@
     renderer.setSize(w, h, false);
     scene3d = new THREE.Scene();
     camera3d = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
-    camera3d.position.set(0, 0, dist);
+    camera3d.position.set(0, 0, 4);
     scene3d.add(new THREE.AmbientLight(0xffffff, 0.85));
     var d = new THREE.DirectionalLight(0xffffff, 0.9);
     d.position.set(2, 3, 4);
     scene3d.add(d);
     if (window.THREE && THREE.GLTFLoader) gltfLoader = new THREE.GLTFLoader();
     else if (window.GLTFLoader) gltfLoader = new window.GLTFLoader();
-    // gizmo transformasi kustom (geser & putar) untuk overlay AR
-    gizmo = new TransformGizmo(camera3d, canvas);
-    gizmo.addTo(scene3d);
-    bindOrbit(canvas);
+    // controller: objek hanya bergerak via panel kontrol
+    ctrl = new TransformController(null, camera3d);
+    bindPanelBar();
     requestAnimationFrame(function () { tick(gen); });
   }
 
-  function bindOrbit(canvas) {
-    canvas.addEventListener("pointerdown", function (e) {
-      if (gizmo && gizmo.dragging) return;
-      dragging = true; lastX = e.clientX; lastY = e.clientY;
-    });
-    window.addEventListener("pointermove", function (e) {
-      if (!dragging || (gizmo && gizmo.dragging)) return;
-      rotY += (e.clientX - lastX) * 0.01;
-      rotX += (e.clientY - lastY) * 0.01;
-      rotX = Math.max(-1.4, Math.min(1.4, rotX));
-      lastX = e.clientX; lastY = e.clientY;
-    });
-    window.addEventListener("pointerup", function () { dragging = false; });
-    canvas.addEventListener("wheel", function (e) {
-      dist += e.deltaY * 0.004;
-      dist = Math.max(1.5, Math.min(10, dist));
-    }, { passive: true });
-    window.addEventListener("resize", function () { resize3D(); });
+  // bar atas: Reset + Zoom In/Out (overlay kamera)
+  function bindPanelBar() {
+    var doZoom = function (dir) {
+      if (ctrl) ctrl.onZoom(dir);
+    };
+    var bR = document.getElementById("gzReset");
+    var bO = document.getElementById("gzZoomOut");
+    var bI = document.getElementById("gzZoomIn");
+    if (bR) bR.addEventListener("click", function () { if (ctrl) ctrl.reset(); });
+    if (bO) bO.addEventListener("click", function () { doZoom(1); });
+    if (bI) bI.addEventListener("click", function () { doZoom(-1); });
   }
 
   function resize3D() {
@@ -212,11 +192,7 @@
   function tick(gen) {
     if (gen !== gen3d || !renderer) return;
     requestAnimationFrame(function () { tick(gen); });
-    camera3d.position.x = dist * Math.sin(rotY) * Math.cos(rotX);
-    camera3d.position.y = dist * Math.sin(rotX);
-    camera3d.position.z = dist * Math.cos(rotY) * Math.cos(rotX);
     camera3d.lookAt(0, 0, 0);
-    if (gizmo) gizmo.update();
     renderer.render(scene3d, camera3d);
   }
 
@@ -232,8 +208,9 @@
       obj.position.set(0, 0, 0);
       model3d = obj;
       scene3d.add(obj);
-      if (gizmo) gizmo.attach(obj);
+      if (ctrl) ctrl.attach(obj);
       resize3D();
+      buildMovePanel(obj);
       var shell = document.getElementById("arView");
       if (shell) shell.classList.add("with-model");
       var st = document.getElementById("arStatus");
@@ -266,9 +243,23 @@
 
   function dispose3D() {
     gen3d++;
-    if (gizmo) { if (scene3d) gizmo.removeFrom(scene3d); gizmo.detach(); gizmo = null; }
+    ctrl = null;
     if (model3d && scene3d) { scene3d.remove(model3d); model3d = null; }
     if (renderer) { renderer.dispose(); renderer = null; scene3d = null; camera3d = null; }
+  }
+
+  // bangun panel kontrol geser/putar 2D untuk objek aktif (overlay kamera)
+  function buildMovePanel(obj) {
+    var host = document.getElementById("gzPanel");
+    if (!host) return;
+    if (!ctrl) ctrl = new TransformController(null, camera3d);
+    ctrl.attach(obj);
+    buildGizmoPanel(host, {
+      onMove: function (a, amt) { if (ctrl) ctrl.onMove(a, amt); },
+      onRotate: function (a, amt) { if (ctrl) ctrl.onRotate(a, amt); },
+      onReset: function () { if (ctrl) ctrl.reset(); },
+      onZoom: function (d) { if (ctrl) ctrl.onZoom(d); }
+    });
   }
 
   function stopCamera() {
@@ -302,8 +293,8 @@
       return;
     }
     vw.innerHTML =
-      '<div class="mb-4"><div class="eyebrow mb-2">Mode 3D</div><h3>Model Jantung — putar &amp; zoom</h3></div>' +
-      '<div class="viewer3d" id="viewer3d" style="height:460px"><div class="hint3d">Seret untuk memutar · gulir untuk zoom</div></div>';
+      '<div class="mb-4"><div class="eyebrow mb-2">Mode 3D</div><h3>Model Jantung — geser, putar &amp; zoom</h3></div>' +
+      '<div class="viewer3d" id="viewer3d" style="height:460px"><div class="hint3d">Putar kamera: seret latar · gulir: zoom</div></div>';
     var el = document.getElementById("viewer3d");
     var cv = document.createElement("canvas");
     cv.style.width = "100%"; cv.style.height = "100%"; cv.style.display = "block";
@@ -318,57 +309,44 @@
     var d = new THREE.DirectionalLight(0xffffff, 0.9);
     d.position.set(2, 3, 4);
     sc.add(d);
-    // gizmo transformasi (geser & putar) kustom
-    var gizmo = new TransformGizmo(cam, cv);
-    gizmo.addTo(sc);
+    // controller: objek hanya bergerak via panel
+    ctrl = new TransformController(null, cam);
     var gk = (window.CONFIG && CONFIG.modelGLB) || {};
     var url = gk[window.DATA_MARKER[0].model];
     var obj = null;
-    var loaded = function (gltf) {
-      obj = gltf.scene || gltf.scenes[0];
-      sc.add(obj);
-      gizmo.attach(obj);
-      hint.innerHTML = 'Seret kosong: putar kamera · gulir: zoom · Tarik <span style="color:#e5484d">■</span> X / <span style="color:#34c176">■</span> Y / <span style="color:#4d8fe5">■</span> Z: geser · tarik cincin: putar';
-    };
     if (url && gltfLoader) {
-      gltfLoader.load(url, loaded, undefined, function () { App.toast("Gagal memuat GLB."); });
+      gltfLoader.load(url, function (gltf) {
+        obj = gltf.scene || gltf.scenes[0];
+        sc.add(obj);
+        ctrl.attach(obj);
+      }, undefined, function () { App.toast("Gagal memuat GLB."); });
     }
-    // toolbar mode gizmo
+    // bar Reset + Zoom, panel geser/putar di bawahnya (kanan atas)
     var bar = document.createElement("div");
     bar.className = "flex gap-1 absolute top-3 right-3 z-10";
-    bar.innerHTML = '<button class="btn btn-sm" id="gzMove" type="button" aria-pressed="true">Geser</button>' +
-      '<button class="btn btn-sm" id="gzRot" type="button" aria-pressed="false">Putar</button>';
+    bar.innerHTML = '<button class="btn btn-sm" id="gzReset2" type="button" title="Posisi awal">↺ Reset</button>' +
+      '<button class="btn btn-sm" id="gzZoomIn2" type="button" title="Perbesar">+</button>' +
+      '<button class="btn btn-sm" id="gzZoomOut2" type="button" title="Perkecil">−</button>';
+    var phost = document.createElement("div");
+    phost.id = "gzPanel2";
+    phost.className = "absolute right-3 z-10";
+    phost.style.top = "3.2rem";
     el.style.position = "relative";
     el.appendChild(bar);
-    var hint = el.querySelector(".hint3d");
-    bar.querySelector("#gzMove").addEventListener("click", function () {
-      gizmo.setMode("translate"); this.setAttribute("aria-pressed", "true"); bar.querySelector("#gzRot").setAttribute("aria-pressed", "false");
+    el.appendChild(phost);
+    bar.querySelector("#gzReset2").addEventListener("click", function () { ctrl.reset(); });
+    bar.querySelector("#gzZoomOut2").addEventListener("click", function () { ctrl.onZoom(1); });
+    bar.querySelector("#gzZoomIn2").addEventListener("click", function () { ctrl.onZoom(-1); });
+    buildGizmoPanel(phost, {
+      onMove: function (a, amt) { ctrl.onMove(a, amt); },
+      onRotate: function (a, amt) { ctrl.onRotate(a, amt); },
+      onReset: function () { ctrl.reset(); },
+      onZoom: function (dd) { ctrl.onZoom(dd); }
     });
-    bar.querySelector("#gzRot").addEventListener("click", function () {
-      gizmo.setMode("rotate"); this.setAttribute("aria-pressed", "true"); bar.querySelector("#gzMove").setAttribute("aria-pressed", "false");
-    });
-    var dragging = false, lx = 0, ly = 0, rx = 0, ry = 0, dst = 4;
-    el.addEventListener("pointerdown", function (e) {
-      if (gizmo.dragging) return;
-      dragging = true; lx = e.clientX; ly = e.clientY;
-    });
-    window.addEventListener("pointermove", function (e) {
-      if (!dragging || gizmo.dragging) return;
-      ry += (e.clientX - lx) * 0.01; rx += (e.clientY - ly) * 0.01;
-      rx = Math.max(-1.4, Math.min(1.4, rx));
-      lx = e.clientX; ly = e.clientY;
-    });
-    window.addEventListener("pointerup", function () { dragging = false; });
-    el.addEventListener("wheel", function (e) {
-      dst += e.deltaY * 0.004; dst = Math.max(1.5, Math.min(10, dst));
-    }, { passive: true });
+    // latar kanvas beku: tak ada drag/zoom — semua kontrol via panel
+    cam.lookAt(0, 0, 0);
     (function loop() {
       requestAnimationFrame(loop);
-      cam.position.x = dst * Math.sin(ry) * Math.cos(rx);
-      cam.position.y = dst * Math.sin(rx);
-      cam.position.z = dst * Math.cos(ry) * Math.cos(rx);
-      cam.lookAt(0, 0, 0);
-      gizmo.update();
       r.render(sc, cam);
     })();
     window.addEventListener("resize", function () {

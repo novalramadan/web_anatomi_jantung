@@ -533,6 +533,16 @@
     #camVideo { z-index: 1; }
     .ar-frame, .ar-status, .ar-camswitch { z-index: 4; }
 
+    /* panel kontrol transformasi 2D (geser/putar/reset/zoom) */
+    .gz-ctrl { display: flex; flex-direction: column; gap: .55rem; padding: .65rem; background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--line); border-radius: .85rem; box-shadow: var(--shadow-card); backdrop-filter: blur(6px); }
+    .gz-sec { display: flex; flex-direction: column; align-items: center; gap: .1rem; }
+    .gz-title { font-size: .72rem; font-weight: 700; color: var(--ink-2); text-transform: uppercase; letter-spacing: .04em; }
+    .gz-svg { touch-action: none; user-select: none; }
+    .gz-svg .gz-h { opacity: .85; transition: opacity .12s ease; }
+    .gz-svg .gz-h:hover { opacity: 1; }
+    .gz-svg .gz-r { opacity: .85; transition: opacity .12s ease; }
+    .gz-svg .gz-r:hover { opacity: 1; }
+
     .ar-shell.with-model .ar-info { width: min(340px, 60%); bottom: 12px; left: 12px; right: auto; transform: translateY(0); border-radius: .9rem; border: 1px solid var(--line-2); }
     .ar-shell.with-model .ar-info.show { transform: translateY(0); }
     .ar-shell.with-model .ar-frame, .ar-shell.with-model .ar-camswitch { opacity: .3; }
