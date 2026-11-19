@@ -83,13 +83,13 @@
   function render(app) {
     if (!Auth.requireRole("admin")) return;
     var u = Auth.currentUser();
-    var tabs = '<nav class="admin-tabs" aria-label="Pilih entitas">' + ENTITIES.map(function (e) {
+    var tabs = '<nav class="mb-4 flex flex-wrap gap-1.5" aria-label="Pilih entitas">' + ENTITIES.map(function (e) {
       return '<button type="button" class="btn btn-sm' + (e.key === state.ent.key ? " btn-primary" : "") + '" data-ent="' + e.key + '">' + e.label + '</button>';
     }).join("") + '<button type="button" class="btn btn-sm" data-ent="__users">User</button></nav>';
 
     var body = state.ent.key === "__users" || state.tab === "__users" ? usersTable() : itemsTable(state.ent);
 
-    app.innerHTML = '<div class="section-head"><div class="eyebrow">Admin</div><h1>Panel Admin</h1>' +
+    app.innerHTML = '<div class="mb-6"><div class="eyebrow mb-2"><span>Admin</span></div><h1 class="mb-2">Panel Admin</h1>' +
       '<p class="small muted">Masuk sebagai <strong>' + App.escapeHtml(u.email) + '</strong> (' + u.role + '). Perubahan disimpan di perangkat ini (demo).</p></div>' +
       '<div id="adminBody">' + tabs + body + '</div>';
 
@@ -114,11 +114,11 @@
         var s = (v === null || v === undefined) ? "" : (typeof v === "object" ? JSON.stringify(v).slice(0, 60) : String(v).slice(0, 60));
         return '<td>' + App.escapeHtml(s) + '</td>';
       }).join("") +
-        '<td class="row-actions"><button class="btn btn-sm" data-edit="' + x.id + '">Edit</button>' +
-        '<button class="btn btn-sm btn-wrong" data-del="' + x.id + '">Hapus</button></td></tr>';
+        '<td><div class="flex flex-wrap gap-1.5"><button class="btn btn-sm" data-edit="' + x.id + '">Edit</button>' +
+        '<button class="btn btn-sm btn-danger" data-del="' + x.id + '">Hapus</button></div></td></tr>';
     }).join("");
 
-    return '<div class="card"><div class="card-head"><h3>' + ent.label + ' (' + items.length + ')</h3>' +
+    return '<div class="surface-card p-5"><div class="mb-3 flex items-center justify-between gap-3"><h3 class="m-0">' + ent.label + ' (' + items.length + ')</h3>' +
       '<button class="btn btn-primary btn-sm" id="newItem">+ Tambah</button></div>' +
       '<div class="table-wrap"><table><thead><tr>' +
       cols.map(function (f) { return '<th>' + App.escapeHtml(f.l) + '</th>'; }).join("") +
@@ -130,15 +130,15 @@
     var users = Auth.listUsers();
     var rows = users.map(function (u) {
       return '<tr><td>' + App.escapeHtml(u.email) + '</td><td>' + App.escapeHtml(u.nama || "") + '</td>' +
-        '<td><span class="badge' + (u.role === "admin" ? " badge-amber" : "") + '">' + u.role + '</span></td>' +
-        '<td class="row-actions">' +
+        '<td><span class="badge' + (u.role === "admin" ? " badge-warn" : "") + '">' + u.role + '</span></td>' +
+        '<td><div class="flex flex-wrap gap-1.5">' +
         '<button class="btn btn-sm" data-role="' + u.id + '">' + (u.role === "admin" ? "→ Mahasiswa" : "→ Admin") + '</button>' +
         '<button class="btn btn-sm" data-editpw="' + u.id + '">Reset Password</button>' +
-        '<button class="btn btn-sm btn-wrong" data-deluser="' + u.id + '">Hapus</button></td></tr>';
+        '<button class="btn btn-sm btn-danger" data-deluser="' + u.id + '">Hapus</button></div></td></tr>';
     }).join("");
-    return '<div class="card"><div class="card-head"><h3>User (' + users.length + ')</h3></div>' +
+    return '<div class="surface-card p-5"><div class="mb-3"><h3 class="m-0">User (' + users.length + ')</h3></div>' +
       '<div class="table-wrap"><table><thead><tr><th>Email</th><th>Nama</th><th>Role</th><th>Aksi</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
-      '<p class="tiny dim">Registrasi mahasiswa publik; role admin dikendalikan dari sini.</p></div>' +
+      '<p class="tiny dim mt-3">Registrasi mahasiswa publik; role admin dikendalikan dari sini.</p></div>' +
       '<div id="formArea"></div>';
   }
 
@@ -151,19 +151,19 @@
       var v = item[f.n];
       var val = v === undefined || v === null ? "" : (typeof v === "object" ? JSON.stringify(v, null, 2) : String(v));
       var checked = (f.t === "checkbox" && v) ? " checked" : "";
-      if (f.t === "textarea") return '<label class="field"><span class="lbl">' + App.escapeHtml(f.l) + '</span><textarea data-f="' + f.n + '" rows="4">' + App.escapeHtml(val) + '</textarea></label>';
-      if (f.t === "json") return '<label class="field"><span class="lbl">' + App.escapeHtml(f.l) + '</span><textarea data-f="' + f.n + '" rows="5" class="mono">' + App.escapeHtml(val) + '</textarea></label>';
+      if (f.t === "textarea") return '<label class="field"><span class="lbl">' + App.escapeHtml(f.l) + '</span><textarea data-f="' + f.n + '" rows="4" class="input">' + App.escapeHtml(val) + '</textarea></label>';
+      if (f.t === "json") return '<label class="field"><span class="lbl">' + App.escapeHtml(f.l) + '</span><textarea data-f="' + f.n + '" rows="5" class="input mono">' + App.escapeHtml(val) + '</textarea></label>';
       if (f.t === "select") {
         var opts = f.opts.map(function (o) { return '<option' + (o === v ? " selected" : "") + '>' + o + '</option>'; }).join("");
-        return '<label class="field"><span class="lbl">' + App.escapeHtml(f.l) + '</span><select data-f="' + f.n + '">' + opts + '</select></label>';
+        return '<label class="field"><span class="lbl">' + App.escapeHtml(f.l) + '</span><select data-f="' + f.n + '" class="input">' + opts + '</select></label>';
       }
-      if (f.t === "checkbox") return '<label class="field" style="display:flex;gap:10px;align-items:center"><input type="checkbox" data-f="' + f.n + '"' + checked + '><span>' + App.escapeHtml(f.l) + '</span></label>';
-      return '<label class="field"><span class="lbl">' + App.escapeHtml(f.l) + '</span><input type="' + (f.t === "number" ? "number" : "text") + '" data-f="' + f.n + '" value="' + App.escapeHtml(val) + '"></label>';
+      if (f.t === "checkbox") return '<label class="flex items-center gap-3"><input type="checkbox" data-f="' + f.n + '" style="accent-color:var(--brand)"' + checked + '><span>' + App.escapeHtml(f.l) + '</span></label>';
+      return '<label class="field"><span class="lbl">' + App.escapeHtml(f.l) + '</span><input type="' + (f.t === "number" ? "number" : "text") + '" data-f="' + f.n + '" class="input" value="' + App.escapeHtml(val) + '"></label>';
     }).join("");
 
-    area.innerHTML = '<div class="card"><div class="card-head"><h3>' + (isNew ? "Tambah" : "Edit") + ' ' + ent.label + '</h3>' +
+    area.innerHTML = '<div class="surface-card mt-4 p-5"><div class="mb-3 flex items-center justify-between gap-3"><h3 class="m-0">' + (isNew ? "Tambah" : "Edit") + ' ' + ent.label + '</h3>' +
       '<button class="btn btn-sm btn-ghost" id="cancelForm">Batal</button></div>' +
-      '<form id="entForm">' + fields + '<div class="btn-row"><button type="submit" class="btn btn-primary">Simpan</button></div></form></div>';
+      '<form id="entForm">' + fields + '<div class="mt-2 flex flex-wrap gap-3"><button type="submit" class="btn btn-primary">Simpan</button></div></form></div>';
     area.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
     document.getElementById("cancelForm").addEventListener("click", function () { area.innerHTML = ""; });

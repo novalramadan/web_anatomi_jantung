@@ -21,10 +21,10 @@
     page = 0;
     kasusAktif = null;
     var p = Storage.load();
-    var h = '<div class="section-head"><div class="eyebrow">Visual Novel</div><h1>Kasus Klinis Bercabang</h1>' +
+    var h = '<div class="mb-6"><div class="eyebrow mb-2"><span>Visual Novel</span></div><h1 class="mb-3">Kasus Klinis Bercabang</h1>' +
       '<p class="lead">Tiga kasus dari buku latihan, ditambah satu draf bantuan hidup dasar. Setiap keputusan membawamu ke halaman berikutnya. Tidak ada dosis obat; fokus pada alasan fisiologis.</p></div>';
 
-    h += '<div class="vn-shelf">';
+    h += '<div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">';
     kasusList().forEach(function (k) {
       var star = (p.kasus_selesai || {})[k.id] || 0;
       var started = (p.vn_posisi || {})[k.id];
@@ -51,7 +51,7 @@
     });
     h += '</div>';
 
-    h += '<div class="callout" style="margin-top:16px"><strong>Catatan Penanganan:</strong> kasus A–C berasal dari buku latihan; Kasus D (henti jantung mendadak) masih draf dan <em>perlu divalidasi dosen</em>. ' + App.escapeHtml(window.CONFIG.disclaimer || "") + '</div>';
+    h += '<div class="callout mt-5"><strong>Catatan Penanganan:</strong> kasus A–C berasal dari buku latihan; Kasus D (henti jantung mendadak) masih draf dan <em>perlu divalidasi dosen</em>. ' + App.escapeHtml(window.CONFIG.disclaimer || "") + '</div>';
 
     root.innerHTML = h;
   }
@@ -97,16 +97,16 @@
       endHtml = '<div class="vn-end-body">' +
         '<span class="vn-end-badge ' + badgeKelas + '">Kasus selesai</span>' +
         '<p class="vn-score-line">' + bintang + ' dari 3</p>' +
-        '<p class="small" style="color:#6b6b6b;margin:0">Kesalahan: ' + kesalahan + '</p>' +
+        '<p class="small" style="color:var(--ink-3);margin:0">Kesalahan: ' + kesalahan + '</p>' +
         '</div>' +
         '<div class="vn-end-refleksi"><p>Refleksi singkat (tersimpan di perangkat ini):</p>' +
-        '<textarea id="vnRefleksi" aria-label="Refleksi">' + App.escapeHtml(ref) + '</textarea></div>' +
+        '<textarea id="vnRefleksi" class="vn-textarea" aria-label="Refleksi">' + App.escapeHtml(ref) + '</textarea></div>' +
         '<div class="vn-end-nav"><button class="vn-cover-btn" id="vnRefSave" type="button">Simpan Refleksi</button></div>';
     }
 
-    var html = '<div class="section-head"><div class="btn-row" style="justify-content:space-between">' +
-      '<div class="eyebrow">Visual Novel</div>' +
-      '<a class="btn btn-sm btn-ghost" href="#/vn">Daftar Kasus</a></div></div>';
+    var html = '<div class="mb-6 flex items-center justify-between gap-3">' +
+      '<div class="eyebrow"><span>Visual Novel</span></div>' +
+      '<a class="btn btn-sm btn-ghost" href="#/vn">Daftar Kasus</a></div>';
 
     html += '<div class="vn-book"><article class="vn-page' + (P.status === "evaluasi" ? " vn-end-page" : "") + '">' +
       '<nav class="vn-page-nav">' +
@@ -125,8 +125,8 @@
       '</article></div>';
 
     html += '<div class="vn-toolbar">' +
-      '<button type="button" id="vnSave">Simpan</button>' +
-      '<button type="button" id="vnLoad">Muat</button>' +
+      '<button type="button" class="btn btn-sm" id="vnSave">Simpan</button>' +
+      '<button type="button" class="btn btn-sm" id="vnLoad">Muat</button>' +
       '</div>';
 
     root.innerHTML = html;
@@ -202,7 +202,7 @@
   function showLog() {
     var wrap = document.createElement("div");
     wrap.className = "modal-back show";
-    var html = '<div class="modal"><div class="card-head"><h2>Log Buku</h2><button class="btn btn-sm btn-ghost" id="closeLog">Tutup</button></div><div class="vn-log-book">';
+    var html = '<div class="modal"><div class="mb-3 flex items-center justify-between gap-3"><h2 class="m-0">Log Buku</h2><button class="btn btn-sm btn-ghost" id="closeLog">Tutup</button></div><div class="vn-log-book">';
     logEntri.forEach(function (e) {
       html += '<div class="entry"><span class="who ' + (e.who === "Halaman" ? "nar" : "") + '">' + App.escapeHtml(e.who) + '</span>' + App.escapeHtml(e.teks) + '</div>';
     });

@@ -28,6 +28,7 @@ window.DATA_SOAL = [
     opsi: { A: "1,25×", B: "1,6×", C: "2,4×", D: "4×", E: "16×" },
     kunci: "C", pembahasan: "R ∝ 1/r⁴ = 1/0,4096 ≈ 2,44; aliran turun menjadi ± 41%." },
   { id: 9, pertemuan: 3, level: "C3", pertanyaan: "Tekanan darah pasien 150/90 mmHg. MAP ≈ …",
+    gambar: "assets/img/Sick.jpg", keterangan_gambar: "Ilustrasi: pasien dengan tekanan darah tinggi",
     opsi: { A: "100", B: "110", C: "120", D: "130", E: "140 mmHg" },
     kunci: "B", pembahasan: "MAP = 90 + 1/3 (60) = 110 mmHg." },
   { id: 10, pertemuan: 3, level: "C3", pertanyaan: "Dibanding ventrikel normal pada tekanan sistolik dan tebal dinding yang sama, ventrikel yang dilatasi memiliki wall stress yang …",

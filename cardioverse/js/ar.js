@@ -13,9 +13,9 @@
   // Halaman AR utama
   // ============================================================
   function renderAR(app) {
-    var html = '<div class="section-head"><div class="eyebrow">AR Scanner</div><h1>Scan QR Marker Jantung</h1>' +
+    var html = '<div class="mb-6"><div class="eyebrow mb-2"><span>AR Scanner</span></div><h1 class="mb-3">Scan QR Marker Jantung</h1>' +
       '<p class="lead">Arahkan kamera ke QR code marker (lihat halaman Cetak Marker). Model 3D jantung akan muncul di atas layar. Butuh izin kamera dan HTTPS/localhost.</p></div>';
-    html += '<div class="ar-tabs">' +
+    html += '<div class="mb-4 flex flex-wrap gap-2">' +
       '<button class="btn btn-sm btn-primary" id="tabCam" type="button" aria-pressed="true">Kamera</button>' +
       '<button class="btn btn-sm" id="tab3d" type="button" aria-pressed="false">Mode 3D Tanpa Kamera</button>' +
       '<a class="btn btn-sm btn-ghost" href="#/ar/cetak">Cetak Marker</a>' +
@@ -252,9 +252,9 @@
     var body = document.getElementById("arInfoBody");
     var infoEl = document.getElementById("arInfo");
     if (!marker) { infoEl.classList.remove("show"); return; }
-    var html = '<div class="card-head"><h3>' + App.escapeHtml(marker.nama) + '</h3></div>' +
-      '<p class="small muted">' + App.escapeHtml(marker.deskripsi) + '</p>' +
-      '<div class="ar-controls"><a class="btn btn-sm" href="#/materi/' + marker.pertemuan_terkait[0] + '">Buka Materi</a>' +
+    var html = '<h3 class="m-0 mb-1 text-brand">' + App.escapeHtml(marker.nama) + '</h3>' +
+      '<p class="small muted m-0">' + App.escapeHtml(marker.deskripsi) + '</p>' +
+      '<div class="mt-3 flex flex-wrap gap-2"><a class="btn btn-sm" href="#/materi/' + marker.pertemuan_terkait[0] + '">Buka Materi</a>' +
       '<a class="btn btn-sm" href="#/kuis/p/' + marker.pertemuan_terkait[0] + '">Kuis</a></div>';
     body.innerHTML = html;
     infoEl.classList.add("show");
@@ -270,7 +270,7 @@
       return;
     }
     vw.innerHTML =
-      '<div class="section-head"><div class="eyebrow">Mode 3D</div><h3>Model Jantung — putar & zoom</h3></div>' +
+      '<div class="mb-4"><div class="eyebrow mb-2">Mode 3D</div><h3>Model Jantung — putar &amp; zoom</h3></div>' +
       '<div class="viewer3d" id="viewer3d" style="height:460px"><div class="hint3d">Seret untuk memutar · gulir untuk zoom</div></div>';
     var el = document.getElementById("viewer3d");
     var cv = document.createElement("canvas");
@@ -327,9 +327,9 @@
   // Cetak marker QR
   // ============================================================
   function renderCetak(app) {
-    var html = '<div class="section-head"><div class="eyebrow">Cetak Marker</div><h1>Cetak QR Marker</h1>' +
+    var html = '<div class="mb-6"><div class="eyebrow mb-2">Cetak Marker</div><h1 class="mb-3">Cetak QR Marker</h1>' +
       '<p class="lead">QR code ini berisi nilai barcode yang dikenali scanner. Cetak minimal 4×4 cm.</p>' +
-      '<div class="btn-row"><button class="btn btn-primary" id="printBtn" type="button">Cetak / Simpan</button><a class="btn" href="#/ar">Kembali ke Scanner</a></div></div>';
+      '<div class="mt-3 flex flex-wrap gap-3"><button class="btn btn-primary" id="printBtn" type="button">Cetak / Simpan</button><a class="btn" href="#/ar">Kembali ke Scanner</a></div></div>';
     html += '<div class="marker-print" id="markerPrint">';
     window.DATA_MARKER.forEach(function (m) {
       html += '<div class="marker-cell" role="img" aria-label="QR marker ' + App.escapeHtml(m.nama) + '">' +

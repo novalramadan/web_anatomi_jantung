@@ -3,27 +3,27 @@
   "use strict";
 
   function shell(app, mode) {
-    var html = '<div class="auth-wrap">' +
-      '<div class="card auth-card">' +
-        '<div class="card-head"><h2>' + (mode === "login" ? "Masuk" : "Daftar Akun") + '</h2></div>' +
+    var html = '<div class="grid min-h-[60vh] place-items-center px-4 py-8">' +
+      '<div class="surface-card w-full max-w-[440px] p-6 sm:p-7">' +
+        '<div class="mb-4"><h2 class="m-0">' + (mode === "login" ? "Masuk" : "Daftar Akun") + '</h2></div>' +
         '<form id="authForm" novalidate>';
     html += mode === "register"
-      ? '<label class="field"><span class="lbl">Nama</span><input type="text" id="aNama" autocomplete="name" required></label>'
+      ? '<label class="field"><span class="lbl">Nama</span><input type="text" id="aNama" class="input" autocomplete="name" required></label>'
       : '';
-    html += '<label class="field"><span class="lbl">Email</span><input type="email" id="aEmail" autocomplete="email" required></label>' +
-      '<label class="field"><span class="lbl">Password</span><input type="password" id="aPw" autocomplete="' + (mode === "login" ? "current-password" : "new-password") + '" required minlength="6"></label>';
+    html += '<label class="field"><span class="lbl">Email</span><input type="email" id="aEmail" class="input" autocomplete="email" required></label>' +
+      '<label class="field"><span class="lbl">Password</span><input type="password" id="aPw" class="input" autocomplete="' + (mode === "login" ? "current-password" : "new-password") + '" required minlength="6"></label>';
     if (mode === "register") {
-      html += '<label class="field"><span class="lbl">Daftar sebagai</span><select id="aRole"><option value="mahasiswa">Mahasiswa</option><option value="admin">Admin</option></select></label>';
+      html += '<label class="field"><span class="lbl">Daftar sebagai</span><select id="aRole" class="input"><option value="mahasiswa">Mahasiswa</option><option value="admin">Admin</option></select></label>';
     }
     html += '<div class="auth-msg" id="authMsg" aria-live="polite"></div>' +
       '<button type="submit" class="btn btn-primary btn-block">' + (mode === "login" ? "Masuk" : "Buat Akun") + '</button>' +
       '</form>' +
-      '<p class="small muted" style="margin-top:14px">' +
+      '<p class="small muted mt-4">' +
         (mode === "login"
-          ? 'Belum punya akun? <a href="#/register">Daftar</a> · <a href="#/beranda">Lewati & lihat sebagai tamu</a>'
-          : 'Sudah punya akun? <a href="#/login">Masuk</a>') +
+          ? 'Belum punya akun? <a href="#/register" class="text-brand">Daftar</a> · <a href="#/beranda" class="text-brand">Lewati & lihat sebagai tamu</a>'
+          : 'Sudah punya akun? <a href="#/login" class="text-brand">Masuk</a>') +
       '</p>' +
-      (mode === "login" ? '<p class="tiny dim">Demo: admin@cardioverse.local / admin123</p>' : '') +
+      (mode === "login" ? '<p class="tiny dim mt-2">Demo: admin@cardioverse.local / admin123</p>' : '') +
       '</div></div>';
     app.innerHTML = html;
     return app.querySelector("#authForm");

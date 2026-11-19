@@ -29,13 +29,17 @@
     var remedial = (p.soal_salah || []).length;
     var esaiTerjawab = Object.keys(p.esai_jawaban || {}).filter(function (k) { return (p.esai_jawaban[k] || "").trim().length; }).length;
 
-    var html = '<div class="section-head"><div class="eyebrow">Profil</div><h1>Profil & Pengaturan</h1><p class="lead">Semua data tersimpan di perangkat ini (localStorage). Tidak ada yang dikirim ke server.</p></div>';
+    function statCard(v, label) {
+      return '<div class="stat"><span class="k">' + v + '</span><span class="v">' + label + '</span></div>';
+    }
+
+    var html = '<div class="mb-6"><div class="eyebrow mb-2"><span>Profil</span></div><h1 class="mb-3">Profil & Pengaturan</h1><p class="lead">Semua data tersimpan di perangkat ini (localStorage). Tidak ada yang dikirim ke server.</p></div>';
 
     // nama pemain
-    html += '<div class="card"><h3>Identitas</h3><label class="field"><span class="lbl">Nama mahasiswa (opsional)</span><input type="text" id="namaPemain" value="' + App.escapeHtml(p.nama_pemain || "") + '" placeholder="Tulis namamu"></label></div>';
+    html += '<div class="surface-card p-5"><h3 class="mb-3">Identitas</h3><label class="field"><span class="lbl">Nama mahasiswa (opsional)</span><input type="text" id="namaPemain" class="input" value="' + App.escapeHtml(p.nama_pemain || "") + '" placeholder="Tulis namamu"></label></div>';
 
     // statistik
-    html += '<div class="card"><h3>Statistik</h3><div class="stat-row">' +
+    html += '<div class="surface-card mt-4 p-5"><h3 class="mb-3">Statistik</h3><div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">' +
       statCard(done + "/" + total, "Materi selesai") +
       statCard(kuisDiambil, "Kuis diambil") +
       statCard(rataRata + "%", "Rata-rata skor") +
@@ -43,37 +47,37 @@
       statCard(remedial, "Soal remedial") +
       statCard(esaiTerjawab + "/" + window.DATA_ESAI.length, "Esai terjawab") +
       '</div>' +
-      '<div style="margin-top:14px"><div class="small dim">Progres keseluruhan</div><div class="bar lg"><i style="width:' + App.totalProgress() + '%"></i></div></div></div>';
+      '<div class="mt-4"><div class="small dim mb-1">Progres keseluruhan</div><div class="bar lg"><i style="width:' + App.totalProgress() + '%"></i></div></div></div>';
 
     // lencana
-    html += '<div class="card"><h3>Lencana</h3><div class="grid grid-3">';
+    html += '<div class="surface-card mt-4 p-5"><h3 class="mb-3">Lencana</h3><div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">';
     var owned = lencana(p);
     var allBadges = [["Pembuka Jalan", "Menyelesaikan 1 pertemuan"], ["Setengah Jalan", "8 pertemuan selesai"], ["Fisiolog Ulang", "16 pertemuan selesai"], ["Lulus Pertama", "Kuis pertama lulus"], ["Rajin Menguji", "Lulus 5 kuis"], ["Klinis Teliti", "Kasus 3 bintang"], ["Mahasiswa Andalan", "Semua kasus 3 bintang"], ["Penjelajah AR", "Semua marker dipindai"]];
     allBadges.forEach(function (b) {
       var has = owned.some(function (o) { return o[0] === b[0]; });
-      html += '<div class="card" style="' + (has ? "" : "opacity:.4") + '"><strong>' + (has ? "★" : "☆") + " " + b[0] + '</strong><p class="tiny muted">' + b[1] + '</p></div>';
+      html += '<div class="surface-card p-4' + (has ? '' : ' opacity-40') + '"><strong class="' + (has ? 'text-brand' : 'text-ink-3') + '">' + (has ? "★" : "☆") + " " + b[0] + '</strong><p class="tiny muted m-0">' + b[1] + '</p></div>';
     });
     html += '</div></div>';
 
     // pengaturan
     var s = p.pengaturan || {};
-    html += '<div class="card"><h3>Pengaturan Tampilan</h3>' +
+    html += '<div class="surface-card mt-4 p-5"><h3 class="mb-3">Pengaturan Tampilan</h3>' +
       '<label class="field"><span class="lbl">Ukuran font: <strong id="fontVal">' + (s.ukuranFont || 100) + '%</strong></span><input type="range" id="fontRange" min="80" max="140" step="5" value="' + (s.ukuranFont || 100) + '" aria-label="Ukuran font"></label>' +
-      '<label class="field"><span class="lbl">Mode warna</span><select id="themeSel"><option value="terang"' + (s.mode !== "gelap" ? " selected" : "") + '>Terang</option><option value="gelap"' + (s.mode === "gelap" ? " selected" : "") + '>Gelap</option></select></label>' +
-      '<label class="field" style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="soundCk"' + (s.suara !== false ? " checked" : "") + '><span>Efek suara (jika tersedia)</span></label>' +
+      '<label class="field"><span class="lbl">Mode warna</span><select id="themeSel" class="input"><option value="terang"' + (s.mode !== "gelap" ? " selected" : "") + '>Terang</option><option value="gelap"' + (s.mode === "gelap" ? " selected" : "") + '>Gelap</option></select></label>' +
+      '<label class="flex items-center gap-3"><input type="checkbox" id="soundCk"' + (s.suara !== false ? " checked" : "") + ' style="accent-color:var(--brand)"><span>Efek suara (jika tersedia)</span></label>' +
       '</div>';
 
     // ekspor / impor
-    html += '<div class="card"><h3>Ekspor & Impor Materi/Soal Tambahan</h3>' +
+    html += '<div class="surface-card mt-4 p-5"><h3 class="mb-2">Ekspor & Impor Materi/Soal Tambahan</h3>' +
       '<p class="small muted">Ekspor progres kamu ke berkas. Impor JSON tambahan dari dosen untuk menambah materi atau soal (tidak menimpa data bawaan).</p>' +
-      '<div class="btn-row"><button class="btn" id="expProgres" type="button">Ekspor Progres (JSON)</button>' +
+      '<div class="mt-3 flex flex-wrap gap-3"><button class="btn" id="expProgres" type="button">Ekspor Progres (JSON)</button>' +
       '<button class="btn" id="expData" type="button">Ekspor Soal+Materi Saat Ini</button></div>' +
-      '<label class="field" style="margin-top:14px"><span class="lbl">Impor berkas JSON (progres, materi, atau soal tambahan)</span><input type="file" id="impFile" accept="application/json,.json" aria-label="Pilih berkas JSON"></label>' +
+      '<label class="field mt-4"><span class="lbl">Impor berkas JSON (progres, materi, atau soal tambahan)</span><input type="file" id="impFile" class="input" accept="application/json,.json" aria-label="Pilih berkas JSON"></label>' +
       '<div id="impMsg" class="small" aria-live="polite"></div></div>';
 
     // reset
-    html += '<div class="card"><h3>Reset Data</h3><p class="small muted">Menghapus seluruh progres, kuis, kasus, dan refleksi dari perangkat ini. Tindakan ini tidak dapat dibatalkan.</p>' +
-      '<button class="btn btn-primary" id="resetBtn" type="button">Hapus Semua Data</button></div>';
+    html += '<div class="surface-card mt-4 p-5"><h3 class="mb-2 text-danger">Reset Data</h3><p class="small muted">Menghapus seluruh progres, kuis, kasus, dan refleksi dari perangkat ini. Tindakan ini tidak dapat dibatalkan.</p>' +
+      '<button class="btn btn-danger" id="resetBtn" type="button">Hapus Semua Data</button></div>';
 
     app.innerHTML = html;
 
@@ -103,10 +107,10 @@
         try {
           var obj = JSON.parse(reader.result);
           var added = importJSON(obj);
-          msg.innerHTML = '<span class="badge badge-teal">Impor sukses: ' + added + ' item.</span>';
+          msg.innerHTML = '<span class="badge badge-success">Impor sukses: ' + added + ' item.</span>';
           App.toast("Impor berhasil (" + added + " item).");
         } catch (err) {
-          msg.innerHTML = '<span class="badge badge-accent">Gagal: ' + App.escapeHtml(err.message) + '</span>';
+          msg.innerHTML = '<span class="badge badge-danger">Gagal: ' + App.escapeHtml(err.message) + '</span>';
           App.toast("Impor gagal — format JSON tidak valid.");
         }
       };
@@ -120,10 +124,6 @@
       App.toast("Semua data dihapus.");
       App.render();
     });
-  }
-
-  function statCard(v, label) {
-    return '<div class="stat"><span class="k">' + v + '</span><span class="v">' + label + '</span></div>';
   }
 
   function downloadJSON(obj, filename) {
