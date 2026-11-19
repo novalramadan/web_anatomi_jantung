@@ -122,6 +122,18 @@
 
   TransformGizmo.prototype.attach = function (object) {
     this.object = object;
+    this._measure();
+  };
+
+  // hitung pusat & radius objek supaya gizmo duduk di dalam model
+  TransformGizmo.prototype._measure = function () {
+    if (!this.object) { this._localCenter = null; this._radius = 1; return; }
+    this.object.updateWorldMatrix(true, true);
+    var box = new THREE.Box3().setFromObject(this.object);
+    if (box.isEmpty()) { this._localCenter = new THREE.Vector3(); this._radius = 1; return; }
+    var sphere = box.getBoundingSphere(new THREE.Sphere());
+    this._localCenter = this.object.worldToLocal(sphere.center.clone());
+    this._radius = Math.max(0.001, sphere.radius);
   };
 
   TransformGizmo.prototype.detach = function () {
@@ -167,7 +179,7 @@
       var h = hits[0].object;
       var axis = h.userData.axis, type = h.userData.type;
       var obj = self.object;
-      var center = obj.position.clone();
+      var center = self.group.position.clone();
 
       self.dragging = true;
       self.axis = axis;
@@ -185,6 +197,7 @@
         self._plane.setFromNormalAndCoplanarPoint(AXIS[axis], center);
       }
       self._center = center;
+      self._startCenter = center.clone();
       self._setNdc(e);
       if (self.raycaster.ray.intersectPlane(self._plane, self._hit)) {
         self._startPoint = self._hit.clone();
@@ -211,6 +224,10 @@
         var angle = Math.atan2(self._cross.dot(AXIS[self.axis]), self._v0.dot(self._v1));
         self._q.setFromAxisAngle(AXIS[self.axis], angle);
         obj.quaternion.copy(self._q).multiply(self._startObjQuat);
+        // putar mengelilingi pusat gizmo, bukan sumbu lokal objek
+        var c0 = self._startCenter.clone().sub(self._startObjPos);
+        var c1 = c0.clone().applyQuaternion(self._q);
+        obj.position.copy(self._startObjPos).add(c0).sub(c1);
       }
     });
 
@@ -221,13 +238,15 @@
     });
   };
 
-  // panggil tiap frame: ikuti objek + skala konstan di layar
+  // panggil tiap frame: duduk di tengah objek, seukuran objek (di dalam model)
   TransformGizmo.prototype.update = function () {
     if (!this.object) { this.group.visible = false; return; }
+    if (!this._localCenter) this._measure();
     this.group.visible = this.enabled;
-    this.group.position.copy(this.object.position);
-    var d = this.camera.position.distanceTo(this.object.position);
-    this.group.scale.setScalar(Math.max(0.001, d * this.size));
+    this.object.updateWorldMatrix(true, false);
+    var c = this._localCenter.clone().applyMatrix4(this.object.matrixWorld);
+    this.group.position.copy(c);
+    this.group.scale.setScalar(this._radius * 0.65);
   };
 
   window.TransformGizmo = TransformGizmo;
