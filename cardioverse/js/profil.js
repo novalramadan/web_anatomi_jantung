@@ -94,10 +94,10 @@
     });
 
     document.getElementById("expProgres").addEventListener("click", function () {
-      downloadJSON(Storage.load(), "cardioverse_progres.json");
+      downloadJSON(Storage.load(), "Medical-U_progres.json");
     });
     document.getElementById("expData").addEventListener("click", function () {
-      downloadJSON({ soal: window.DATA_SOAL, esai: window.DATA_ESAI, pertemuan: window.DATA_PERTEMUAN.map(function (m) { return { id: m.id, judul: m.judul, blok: m.blok }; }) }, "cardioverse_data.json");
+      downloadJSON({ soal: window.DATA_SOAL, esai: window.DATA_ESAI, pertemuan: window.DATA_PERTEMUAN.map(function (m) { return { id: m.id, judul: m.judul, blok: m.blok }; }) }, "Medical-U_data.json");
     });
     document.getElementById("impFile").addEventListener("change", function (e) {
       var f = e.target.files[0]; if (!f) return;
@@ -118,7 +118,7 @@
     });
 
     document.getElementById("resetBtn").addEventListener("click", function () {
-      if (!confirm("Hapus seluruh data CardioVerse di perangkat ini? Tindakan ini tidak dapat dibatalkan.")) return;
+      if (!confirm("Hapus seluruh data Medical-U di perangkat ini? Tindakan ini tidak dapat dibatalkan.")) return;
       if (!confirm("Yakin? Semua progres, kuis, kasus, esai, dan refleksi akan hilang.")) return;
       Storage.reset();
       App.toast("Semua data dihapus.");

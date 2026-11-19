@@ -184,16 +184,16 @@
     document.documentElement.dataset.theme = s.mode === "gelap" ? "gelap" : "terang";
     document.documentElement.style.setProperty("--fs", (s.ukuranFont || 100) + "%");
     var logo = document.getElementById("brandLogo");
-    if (logo) { logo.src = window.CONFIG.logo || "assets/img/logo.svg"; logo.alt = window.CONFIG.namaWeb || "CardioVerse"; }
+    if (logo) { logo.src = window.CONFIG.logo || "assets/img/logo.svg"; logo.alt = window.CONFIG.namaWeb || "Medical-U"; }
     var bn = document.getElementById("brandName");
-    if (bn) bn.textContent = window.CONFIG.namaWeb || "CardioVerse";
+    if (bn) bn.textContent = window.CONFIG.namaWeb || "Medical-U";
     var d = document.getElementById("disclaimer");
     if (d) d.textContent = window.CONFIG.disclaimer || "";
     var fi = document.getElementById("footInstitusi");
     if (fi) fi.textContent = window.CONFIG.institusi || "";
     var fd = document.getElementById("footDosen");
     if (fd) fd.textContent = window.CONFIG.dosen || "";
-    document.title = (window.CONFIG.namaWeb || "CardioVerse") + " — Fisiologi Jantung";
+    document.title = (window.CONFIG.namaWeb || "Medical-U") + " — Fisiologi Jantung";
   }
 
   function updateNav() {

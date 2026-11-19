@@ -1,7 +1,7 @@
 /* js/config.js — SEMUA pengaturan yang perlu diganti dosen ada di sini. */
 window.CONFIG = {
   // ==== GANTI MANUAL ====
-  namaWeb: "CardioVerse",                       // nama web
+  namaWeb: "Medical-U",                       // nama web
   logo: "assets/img/logo.svg",                  // logo (SVG/PNG)
   institusi: "[Nama Institusi]",                // nama institusi
   dosen: "[Nama Dosen Pengampu]",               // nama dosen
@@ -14,6 +14,6 @@ window.CONFIG = {
     jantung: "assets/models/jantung.glb"
   },
   disclaimer: "Hanya untuk pembelajaran; bukan pengganti penilaian klinis dan pedoman resmi.",
-  kunciStorage: "cardioverse_progres",
+  kunciStorage: "Medical-U_progres",
   versi: "1.0.1"
 };

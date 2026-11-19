@@ -23,7 +23,7 @@
           ? 'Belum punya akun? <a href="#/register" class="text-brand">Daftar</a> · <a href="#/beranda" class="text-brand">Lewati & lihat sebagai tamu</a>'
           : 'Sudah punya akun? <a href="#/login" class="text-brand">Masuk</a>') +
       '</p>' +
-      (mode === "login" ? '<p class="tiny dim mt-2">Demo: admin@cardioverse.local / admin123</p>' : '') +
+      (mode === "login" ? '<p class="tiny dim mt-2">Demo: admin@Medical-U.local / admin123</p>' : '') +
       '</div></div>';
     app.innerHTML = html;
     return app.querySelector("#authForm");

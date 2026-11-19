@@ -3,8 +3,8 @@
 (function () {
   "use strict";
 
-  var USERS_KEY = "cardioverse_users";
-  var SESSION_KEY = "cardioverse_session";
+  var USERS_KEY = "Medical-U_users";
+  var SESSION_KEY = "Medical-U_session";
 
   // ---------- provider interface (tukar di sini saat deploy) ----------
   var AuthProvider = {
@@ -36,7 +36,7 @@
     var users = AuthProvider.listUsers();
     if (users.some(function (u) { return u.role === "admin"; })) return;
     AuthProvider.hash("admin123").then(function (h) {
-      users.push({ id: "u_admin", nama: "Admin", email: "admin@cardioverse.local", pw: h, role: "admin", dibuat: new Date().toISOString() });
+      users.push({ id: "u_admin", nama: "Admin", email: "admin@Medical-U.local", pw: h, role: "admin", dibuat: new Date().toISOString() });
       AuthProvider.saveUsers(users);
     });
   }

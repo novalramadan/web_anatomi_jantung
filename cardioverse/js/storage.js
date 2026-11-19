@@ -1,6 +1,6 @@
-/* js/storage.js — progres pengguna di localStorage (kunci cardioverse_progres). */
+/* js/storage.js — progres pengguna di localStorage (kunci Medical-U_progres). */
 window.Storage = (function () {
-  var KEY = (window.CONFIG && CONFIG.kunciStorage) || "cardioverse_progres";
+  var KEY = (window.CONFIG && CONFIG.kunciStorage) || "Medical-U_progres";
 
   function defaults() {
     return {
