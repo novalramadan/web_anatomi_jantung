@@ -151,11 +151,24 @@
     o.position[axis] = THREE.MathUtils.clamp(o.position[axis] + step, -this._bnd.pos, this._bnd.pos);
   };
 
+  // geser mengikuti layar: sx>0 = kanan, sy>0 = bawah (pakai basis kamera)
+  TransformController.prototype.onMoveScreen = function (sx, sy) {
+    var o = this.object, cam = this.camera;
+    if (!o || !cam) return;
+    var right = new THREE.Vector3(), up = new THREE.Vector3(), back = new THREE.Vector3();
+    cam.matrixWorld.extractBasis(right, up, back);
+    var k = 0.005;
+    o.position.addScaledVector(right, sx * k);
+    o.position.addScaledVector(up, -sy * k);
+    o.position.x = THREE.MathUtils.clamp(o.position.x, -3, 3);
+    o.position.y = THREE.MathUtils.clamp(o.position.y, -3, 3);
+  };
+
   TransformController.prototype.onRotate = function (axis, amt) {
     var o = this.object;
     if (!o) return;
     var q = new THREE.Quaternion().setFromAxisAngle(AXIS[axis], amt);
-    o.quaternion.premultiply(q);
+    o.quaternion.multiplyQuaternions(q, o.quaternion);
   };
 
   TransformController.prototype.onZoom = function (dir) {

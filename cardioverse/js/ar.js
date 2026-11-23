@@ -9,6 +9,7 @@
   var camFacing = "environment";
   var ctrl = null;
   var gen3d = 0;
+  var loadedKey = null;
 
   // ============================================================
   // Halaman AR utama
@@ -43,17 +44,19 @@
     document.getElementById("tab3d").addEventListener("click", function () { switchTab(app, "3d"); });
     // init Three.js overlay SEKARANG agar canvas sudah berukuran saat QR ditemukan
     setTimeout(function () { ensure3D(); startCamera(); }, 60);
-    // panel kontrol (Reset / Zoom) aktif segera; geser & putar menyusul saat model terpasang
-    bindPanelBar();
   }
 
   function switchTab(app, mode) {
     stopCamera();
     dispose3D();
-    document.getElementById("tabCam").setAttribute("aria-pressed", mode === "cam");
-    document.getElementById("tab3d").setAttribute("aria-pressed", mode === "3d");
-    if (mode === "cam") startCamera();
-    else render3DView();
+    if (mode === "cam") {
+      // bangun ulang seluruh halaman AR (canvas + panel gizmo + bar) lalu nyalakan kamera
+      renderAR(app);
+    } else {
+      document.getElementById("tabCam").setAttribute("aria-pressed", "false");
+      document.getElementById("tab3d").setAttribute("aria-pressed", "true");
+      render3DView();
+    }
   }
 
   // ============================================================
@@ -133,6 +136,9 @@
     }
     var st2 = document.getElementById("arStatus");
     if (st2) { st2.textContent = marker.nama + " ditemukan"; st2.className = "ar-status found"; }
+    // dedup: hanya muat ulang bila marker BERBEDA. Tanpa ini, scan tiap 250ms me-reset objek
+    if (loadedKey === String(marker.nilai_barcode) && model3d) return;
+    loadedKey = String(marker.nilai_barcode);
     showInfo(marker);
     loadModelToOverlay(marker);
   }
@@ -163,6 +169,13 @@
     // controller: objek hanya bergerak via panel kontrol
     ctrl = new TransformController(null, camera3d);
     bindPanelBar();
+    bindCanvasDrag(canvas);
+    buildGizmoPanel(document.getElementById("gzPanel"), {
+      onMove: function (a, amt) { if (ctrl) ctrl.onMove(a, amt); },
+      onRotate: function (a, amt) { if (ctrl) ctrl.onRotate(a, amt); },
+      onReset: function () { if (ctrl) ctrl.reset(); },
+      onZoom: function (d) { if (ctrl) ctrl.onZoom(d); }
+    });
     requestAnimationFrame(function () { tick(gen); });
   }
 
@@ -179,6 +192,34 @@
     if (bI) bI.addEventListener("click", function () { doZoom(-1); });
   }
 
+  // tarik di canvas langsung: biasa = geser X/Y; tahan Shift = putar Y/X
+  function bindCanvasDrag(canvas) {
+    if (!canvas) return;
+    var D = { mode: null, lx: 0, ly: 0 };
+    canvas.addEventListener("pointerdown", function (e) {
+      if (!model3d || !ctrl) return;
+      e.preventDefault();
+      try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+      D.mode = e.shiftKey ? "rotate" : "move";
+      D.lx = e.clientX; D.ly = e.clientY;
+    });
+    canvas.addEventListener("pointermove", function (e) {
+      if (!D.mode || !ctrl) return;
+      var dx = e.clientX - D.lx, dy = e.clientY - D.ly;
+      D.lx = e.clientX; D.ly = e.clientY;
+      if (D.mode === "move") {
+        ctrl.onMoveScreen(dx, dy);
+      } else {
+        if (dx) ctrl.onRotate("y", dx * 0.02);
+        if (dy) ctrl.onRotate("x", -dy * 0.02);
+      }
+    });
+    function endDrag() { D.mode = null; }
+    canvas.addEventListener("pointerup", endDrag);
+    canvas.addEventListener("pointercancel", endDrag);
+    canvas.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+  }
+
   function resize3D() {
     if (!renderer) return;
     var canvas = document.getElementById("glbCanvas");
@@ -192,7 +233,7 @@
   function tick(gen) {
     if (gen !== gen3d || !renderer) return;
     requestAnimationFrame(function () { tick(gen); });
-    camera3d.lookAt(0, 0, 0);
+    camera3d.lookAt(model3d ? model3d.position : new THREE.Vector3(0, 0, 0));
     renderer.render(scene3d, camera3d);
   }
 
@@ -210,7 +251,6 @@
       scene3d.add(obj);
       if (ctrl) ctrl.attach(obj);
       resize3D();
-      buildMovePanel(obj);
       var shell = document.getElementById("arView");
       if (shell) shell.classList.add("with-model");
       var st = document.getElementById("arStatus");
@@ -246,20 +286,6 @@
     ctrl = null;
     if (model3d && scene3d) { scene3d.remove(model3d); model3d = null; }
     if (renderer) { renderer.dispose(); renderer = null; scene3d = null; camera3d = null; }
-  }
-
-  // bangun panel kontrol geser/putar 2D untuk objek aktif (overlay kamera)
-  function buildMovePanel(obj) {
-    var host = document.getElementById("gzPanel");
-    if (!host) return;
-    if (!ctrl) ctrl = new TransformController(null, camera3d);
-    ctrl.attach(obj);
-    buildGizmoPanel(host, {
-      onMove: function (a, amt) { if (ctrl) ctrl.onMove(a, amt); },
-      onRotate: function (a, amt) { if (ctrl) ctrl.onRotate(a, amt); },
-      onReset: function () { if (ctrl) ctrl.reset(); },
-      onZoom: function (d) { if (ctrl) ctrl.onZoom(d); }
-    });
   }
 
   function stopCamera() {
@@ -309,8 +335,9 @@
     var d = new THREE.DirectionalLight(0xffffff, 0.9);
     d.position.set(2, 3, 4);
     sc.add(d);
-    // controller: objek hanya bergerak via panel
+    // controller: objek hanya bergerak via panel / tarikan canvas
     ctrl = new TransformController(null, cam);
+    bindCanvasDrag(cv);
     var gk = (window.CONFIG && CONFIG.modelGLB) || {};
     var url = gk[window.DATA_MARKER[0].model];
     var obj = null;
