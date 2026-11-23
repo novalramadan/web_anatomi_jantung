@@ -23,9 +23,6 @@
     return { id: s.id, pertemuan: s.pertemuan, level: s.level, pertanyaan: s.pertanyaan, opsi: opsiBaru, kunci: kunciBaru, pembahasan: s.pembahasan, gambar: s.gambar || s.image || null, keteranganGambar: s.keterangan_gambar || s.caption || "" };
   }
 
-  // SEMENTARA: tampilkan gambar ini untuk SEMUA soal (untuk pratinjau tata letak).
-  // Hapus / set null bila ingin gambar per-soal kembali mengikuti field `gambar` di data/soal.js.
-  var GAMBAR_SEMENTARA = "assets/img/Sick.jpg";
 
   // ---------- pilih mode ----------
   function renderPick(app) {
@@ -103,13 +100,14 @@
     var subTitle = m ? m.judul : "";
 
     // —— panel kiri: media (sage) ——
-    var imgSrc = s.gambar || (typeof GAMBAR_SEMENTARA !== "undefined" ? GAMBAR_SEMENTARA : null);
-    var imgCaption = s.keteranganGambar || (imgSrc === GAMBAR_SEMENTARA ? "Gambar pendukung (pratinjau)" : "Gambar pendukung soal");
+    var hasDbImage = !!(s.gambar && s._recordId && s._fileName);
+    var imgSrc = hasDbImage ? null : "assets/img/Sick.jpg";
+    var imgCaption = hasDbImage ? "Gambar pendukung soal" : "Gambar pendukung (pratinjau)";
+    var imageUrlPromise = hasDbImage ? PB.fileUrl("soal", s._recordId, s._fileName) : null;
 
     function imageStage() {
-      if (imgSrc) {
-        return '<img src="' + App.escapeHtml(imgSrc) + '" alt="Ilustrasi soal" loading="lazy">';
-      }
+      if (hasDbImage) return '<div id="quizDbImg" class="quiz-img-loading">Memuat gambar…</div>';
+      if (imgSrc) return '<img src="' + App.escapeHtml(imgSrc) + '" alt="Ilustrasi soal" loading="lazy">';
       return '<div class="quiz-img-placeholder"><svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>'
         + '<p>Ilustrasi untuk soal ini belum tersedia.</p></div>';
     }
@@ -186,6 +184,16 @@
     var html = '<div class="quiz-wrap">' + headerBar + progressBar + '<div class="quiz-split">' + mediaHtml + contentHtml + '</div></div>';
 
     app.innerHTML = html;
+
+    if (imageUrlPromise) {
+      imageUrlPromise.then(function (url) {
+        var slot = document.getElementById("quizDbImg");
+        if (slot) slot.innerHTML = '<img src="' + App.escapeHtml(url) + '" alt="Ilustrasi soal" loading="lazy">';
+      }).catch(function () {
+        var slot = document.getElementById("quizDbImg");
+        if (slot) slot.textContent = "Gambar gagal dimuat.";
+      });
+    }
 
     app.querySelectorAll("[data-opt]").forEach(function (b) {
       b.addEventListener("click", function () { answer(b.dataset.opt); });

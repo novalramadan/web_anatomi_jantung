@@ -1,0 +1,123 @@
+[
+ {
+  "judul": "1. Fungsi sistem kardiovaskular",
+  "isi": "(a) Mengantar O₂, nutrisi, hormon, dan sel imun ke jaringan; (b) mengangkut CO₂ dan hasil metabolisme ke organ ekskresi; (c) membantu termoregulasi (aliran kulit); (d) menjaga homeostasis cairan lewat pertukaran kapiler. Volume darah dewasa ± 5 L (± 70 mL/kg), hematokrit ± 45% (pria) dan ± 42% (wanita)."
+ },
+ {
+  "judul": "2. Sirkulasi ganda",
+  "isi": "Jantung kanan memompa darah ke paru (sirkulasi pulmonal, tekanan rendah), jantung kiri ke seluruh tubuh (sirkulasi sistemik, tekanan tinggi). Kedua sirkulasi dihubungkan seri, sehingga dalam jangka panjang curah ventrikel kanan = kiri (± 5 L/menit). Selisih sesaat diredam oleh volume darah paru dan mekanisme Frank–Starling (Pertemuan 11). Tekanan paru dijaga rendah agar tidak terjadi filtrasi cairan ke alveolus (edema paru).",
+  "tabel": [
+   {
+    "judul": "Perbandingan sirkulasi sistemik dan pulmonal",
+    "kolom": [
+     "Parameter",
+     "Sistemik",
+     "Pulmonal"
+    ],
+    "baris": [
+     [
+      "Tekanan arteri",
+      "120/80 mmHg, rerata ± 93",
+      "25/8–10 mmHg, rerata ± 15"
+     ],
+     [
+      "Resistensi vaskular",
+      "Tinggi (SVR ± 800–1200 dyne·s/cm⁵)",
+      "Rendah (PVR ± 40–150)"
+     ],
+     [
+      "Dinding ventrikel",
+      "Tebal",
+      "Tipis"
+     ],
+     [
+      "Fungsi",
+      "Perfusi jaringan",
+      "Pertukaran gas"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "judul": "3. Susunan seri dan paralel",
+  "isi": "Seri (jantung kanan → paru → jantung kiri → tubuh): seluruh curah harus melewati tiap segmen; resistensi dijumlahkan. Paralel (otak, jantung, ginjal, hati, otot, kulit memancar dari aorta): setiap organ menerima darah teroksigenasi penuh, aliran tiap organ dapat diatur sendiri tanpa menurunkan organ lain, dan resistensi total lebih kecil daripada resistensi organ mana pun. Distribusi aliran istirahat (perkiraan, % curah jantung): hati dan saluran cerna ± 27, ginjal ± 22, otot istirahat ± 15, otak ± 14, kulit ± 6, jantung ± 4, lain ± 12. Saat latihan, aliran otot bisa mencapai ± 80% curah jantung karena resistensi otot turun, sementara aliran ke ginjal dan saluran cerna ditekan."
+ },
+ {
+  "judul": "4. Pohon vaskular: tiga tipe pembuluh",
+  "isi": "Distribusi volume darah: vena dan venula ± 64%, arteri ± 13%, kapiler ± 7%, jantung ± 7%, paru ± 9%.",
+  "tabel": [
+   {
+    "judul": "Tipe pembuluh dan sifat utamanya",
+    "kolom": [
+     "Fungsi",
+     "Pembuluh",
+     "Sifat utama"
+    ],
+    "baris": [
+     [
+      "Penyangga tekanan (konduit)",
+      "Aorta, arteri besar",
+      "Elastis, komplians; menyimpan sebagian SV saat sistol (efek Windkessel)"
+     ],
+     [
+      "Resistensi",
+      "Arteriol",
+      "Otot polos tebal, jari-jari berubah → pengatur utama tekanan dan distribusi aliran"
+     ],
+     [
+      "Pertukaran",
+      "Kapiler",
+      "Dinding satu lapis sel endotel; total luas besar, aliran lambat"
+     ],
+     [
+      "Kapasitansi",
+      "Venula dan vena",
+      "Dinding tipis, sangat komplians; menampung ± 64% volume darah"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "judul": "5. Tekanan, luas penampang, dan kecepatan",
+  "isi": "Aliran Q (= curah jantung) sama di setiap tingkat pohon vaskular. Menurut prinsip kontinuitas Q = A × v, kecepatan berbanding terbalik dengan total luas penampang. Luas penampang aorta ± 2,5–5 cm², sedangkan total kapiler ± 2500–4500 cm², sehingga kecepatan aliran kapiler ± 1000× lebih lambat daripada aorta. Kecepatan rendah memberi waktu bagi difusi O₂ dan nutrisi.",
+  "tabel": [
+   {
+    "judul": "Profil tekanan di sepanjang pohon vaskular",
+    "kolom": [
+     "Segmen",
+     "Tekanan rerata (mmHg, perkiraan)",
+     "Catatan"
+    ],
+    "baris": [
+     [
+      "Aorta dan arteri besar",
+      "± 90–95",
+      "Berdenyut (120/80)"
+     ],
+     [
+      "Arteriol",
+      "turun dari ± 80 ke ± 35",
+      "Penurunan tekanan terbesar: tempat resistensi utama"
+     ],
+     [
+      "Kapiler",
+      "± 35 (ujung arteriol) → ± 15 (ujung venula)",
+      "Tidak berdenyut"
+     ],
+     [
+      "Venula dan vena",
+      "± 10 → 5",
+      "Tekanan rendah, volume besar"
+     ],
+     [
+      "Vena cava dan atrium kanan",
+      "± 0–8 (CVP)",
+      "Tekanan pengisian jantung kanan"
+     ]
+    ]
+   }
+  ]
+ }
+]

@@ -203,7 +203,7 @@
     var na = document.getElementById("navAdmin");
     if (nl) nl.hidden = !!u;
     if (lo) lo.hidden = !u;
-    if (na) na.hidden = !(u && u.role === "admin");
+    if (na) na.hidden = !(u && (u.role === "admin" || u.role === "dosen"));
   }
 
   function setTheme(mode) {
@@ -228,8 +228,20 @@
     render();
   }
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
-  else boot();
+  function start() {
+    if (!window.PB || !window.PB.ready) { boot(); return; }
+    window.PB.ready.then(function () { boot(); }).catch(function (err) {
+      console.error("Medical-U tidak dapat memuat data:", err);
+      var app = document.getElementById("app");
+      if (app) {
+        var detail = (err && err.message) ? App.escapeHtml(String(err.message)) : "unknown error; buka console untuk detail";
+        app.innerHTML = '<div class="surface-card p-6"><h1>Data tidak dapat dimuat</h1><p class="text-ink-2">' + detail + '. Pastikan PocketBase berjalan di ' + window.location.origin + ' lalu muat ulang halaman (Ctrl+Shift+R).</p></div>';
+      }
+    });
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
+  else start();
 
   // expose tiny API
   window.App = {

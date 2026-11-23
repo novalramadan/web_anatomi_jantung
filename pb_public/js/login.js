@@ -13,7 +13,7 @@
     html += '<label class="field"><span class="lbl">Email</span><input type="email" id="aEmail" class="input" autocomplete="email" required></label>' +
       '<label class="field"><span class="lbl">Password</span><input type="password" id="aPw" class="input" autocomplete="' + (mode === "login" ? "current-password" : "new-password") + '" required minlength="6"></label>';
     if (mode === "register") {
-      html += '<label class="field"><span class="lbl">Daftar sebagai</span><select id="aRole" class="input"><option value="mahasiswa">Mahasiswa</option><option value="admin">Admin</option></select></label>';
+      html += '<label class="field"><span class="lbl">Peran</span><select id="aRole" class="input" disabled><option value="mahasiswa">Mahasiswa</option></select><p class="tiny dim mt-1">Peran dosen hanya diberikan melalui Dashboard PocketBase.</p></label>';
     }
     html += '<div class="auth-msg" id="authMsg" aria-live="polite"></div>' +
       '<button type="submit" class="btn btn-primary btn-block">' + (mode === "login" ? "Masuk" : "Buat Akun") + '</button>' +
@@ -23,7 +23,7 @@
           ? 'Belum punya akun? <a href="#/register" class="text-brand">Daftar</a> · <a href="#/beranda" class="text-brand">Lewati & lihat sebagai tamu</a>'
           : 'Sudah punya akun? <a href="#/login" class="text-brand">Masuk</a>') +
       '</p>' +
-      (mode === "login" ? '<p class="tiny dim mt-2">Demo: admin@Medical-U.local / admin123</p>' : '') +
+      (mode === "login" ? '<p class="tiny dim mt-2">Demo: dosen@medicalu.local / dosen12345 · mahasiswa@medicalu.local / mahasiswa12345</p>' : '') +
       '</div></div>';
     app.innerHTML = html;
     return app.querySelector("#authForm");
@@ -38,7 +38,7 @@
 
   function afterAuth(u) {
     App.toast("Selamat datang, " + (u.nama || u.email) + ".");
-    location.hash = u.role === "admin" ? "#/admin" : "#/beranda";
+    location.hash = u.role === "dosen" || u.role === "admin" ? "#/admin" : "#/beranda";
     App.render();
   }
 

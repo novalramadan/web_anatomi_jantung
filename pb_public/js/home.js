@@ -34,6 +34,17 @@
   }
 
   function render(app) {
+    var u = Auth.currentUser();
+    if (!u || !(window.DATA_PERTEMUAN || []).length) {
+      // belum login: PB menyembunyikan konten sampai autentikasi sukses
+      location.hash = "#/login";
+      App.render();
+      return;
+    }
+    var p = Storage.load();
+    var total = window.DATA_PERTEMUAN.length;
+    var done = p.materi_selesai.length;
+    var pctDone = App.pct(done, total);
     var p = Storage.load();
     var total = window.DATA_PERTEMUAN.length;
     var done = p.materi_selesai.length;

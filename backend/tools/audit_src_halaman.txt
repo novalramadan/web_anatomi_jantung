@@ -1,0 +1,162 @@
+[
+ {
+  "id": "A1",
+  "nomor": 3,
+  "tipe": "awal",
+  "label": "Awal",
+  "judul": "Perdarahan Masif",
+  "cerita": "<p>Pria 35 tahun dibawa ke IGD setelah kecelakaan sepeda motor, <b>fraktur femur terbuka kanan</b> dengan perdarahan aktif. Akral dingin dan pucat.</p><p><b>Apa langkah pertamamu?</b></p>",
+  "gambar": "<svg viewBox=\"0 0 220 180\"><rect x=\"125\" y=\"15\" width=\"85\" height=\"62\" rx=\"6\"/><text class=\"red\" x=\"133\" y=\"36\">TD 75/45</text><text class=\"red\" x=\"133\" y=\"53\">N 130</text><path class=\"blue\" d=\"M132 66 h10 l4 -8 l4 12 l4 -4 h10 l4 -8 l4 12 l4 -4 h10\"/><path d=\"M10 118 q40 -12 70 -6 l40 4 q20 2 22 18 q-2 14 -22 14 l-40 -2 q-30 -2 -70 6\"/><path class=\"red\" d=\"M62 112 l6 8 l-6 8 l6 8 l-6 8\"/><path class=\"red fill-red\" d=\"M66 150 q-5 9 0 12 q5 -3 0 -12 M78 152 q-4 7 0 10 q4 -3 0 -10 M54 154 q-4 7 0 10 q4 -3 0 -10\"/></svg>",
+  "vital": [
+   "TD <b>75/45</b>",
+   "MAP ± <b>55</b>",
+   "Nadi <b>130</b> lemah",
+   "RR 28",
+   "CRT &gt; 4 dtk",
+   "GCS 14"
+  ],
+  "adegan": [
+   {
+    "pembicara": "Narasi",
+    "teks": "Pria 35 tahun dibawa ke IGD setelah kecelakaan sepeda motor, fraktur femur terbuka kanan dengan perdarahan aktif. Akral dingin dan pucat. Apa langkah pertamamu?"
+   }
+  ],
+  "efek_vital": null,
+  "pilihan": [
+   {
+    "teks": "Hentikan perdarahan (tekanan langsung/torniket), pasang dua akses IV besar, resusitasi terbatas dengan produk darah, target tekanan permisif",
+    "tujuan": "A2",
+    "alt": false
+   },
+   {
+    "teks": "Beri vasodilator arteri untuk menurunkan SVR karena akral dingin",
+    "tujuan": "A3",
+    "alt": false
+   },
+   {
+    "teks": "Beri vasopresor dosis tinggi segera tanpa volume",
+    "tujuan": "A4",
+    "alt": false
+   },
+   {
+    "teks": "Duduk dan minum, observasi",
+    "tujuan": "A5",
+    "alt": false
+   }
+  ]
+ },
+ {
+  "id": "A2",
+  "nomor": 4,
+  "tipe": "tepat",
+  "label": "Tepat",
+  "judul": "Hentikan Perdarahan",
+  "cerita": "<p>Sumber perdarahan dikendalikan sehingga volume tidak terus hilang. Pemberian darah menggantikan volume dan kapasitas pengangkut O₂ tanpa mengencerkan faktor pembekuan; preload dan CO pulih sehingga simpatis dapat mereda.</p><p>Target tekanan permisif (sistolik ± 80–90 mmHg atau MAP ± 50–65 mmHg, kecuali cedera kepala) menghindari tekanan tinggi yang memecah bekuan sebelum sumber perdarahan tertutup.</p><p><b>Evaluasi:</b> HR turun, CRT membaik, urin &gt; 0,5 mL/kg/jam, laktat turun. Cegah <i>lethal triad</i>: hipotermia, asidosis, koagulopati.</p><p class=\"note\"><b>Mengapa fisiologis:</b> ΔP dikembalikan lewat volume, bukan lewat mengubah resistensi.</p>",
+  "gambar": "<svg viewBox=\"0 0 220 180\"><rect x=\"140\" y=\"12\" width=\"52\" height=\"68\" rx=\"8\"/><path class=\"fill-red red\" d=\"M142 46 h48 v26 q0 6 -6 6 h-36 q-6 0 -6 -6 z\"/><text x=\"150\" y=\"35\">DARAH</text><path d=\"M166 80 v20 q0 25 -35 32\"/><path d=\"M10 112 h120 q14 0 14 15 q0 15 -14 15 h-120\"/><rect class=\"blue\" x=\"55\" y=\"104\" width=\"16\" height=\"46\" rx=\"3\"/><path class=\"blue\" d=\"M63 104 l14 -22 M70 86 l14 2\"/><path class=\"red\" d=\"M105 120 l8 10\"/></svg>",
+  "vital": [],
+  "adegan": [
+   {
+    "pembicara": "Narasi",
+    "teks": "Sumber perdarahan dikendalikan sehingga volume tidak terus hilang. Pemberian darah menggantikan volume dan kapasitas pengangkut O₂ tanpa mengencerkan faktor pembekuan; preload dan CO pulih sehingga simpatis dapat mereda. Target tekanan permisif (sistolik ± 80–90 mmHg atau MAP ± 50–65 mmHg, kecuali cedera kepala) menghindari tekanan tinggi yang memecah bekuan sebelum sumber perdarahan tertutup. Evaluasi: HR turun, CRT membaik, urin &gt; 0,5 mL/kg/jam, laktat turun. Cegah lethal triad : hipotermia, asidosis, koagulopati. Mengapa fisiologis: ΔP dikembalikan lewat volume, bukan lewat mengubah resistensi."
+   }
+  ],
+  "efek_vital": null,
+  "pilihan": [
+   {
+    "teks": "Lanjut ke evaluasi kasus",
+    "tujuan": "A6",
+    "alt": false
+   }
+  ]
+ },
+ {
+  "id": "A3",
+  "nomor": 5,
+  "tipe": "keliru",
+  "label": "Keliru",
+  "judul": "Vasodilator",
+  "cerita": "<p>Vasodilator menurunkan SVR; karena CO sudah turun akibat preload rendah, <b>MAP anjlok</b> (MAP ≈ CO × SVR). Perfusi otak dan koroner turun, pasien kehilangan kesadaran.</p><p class=\"note\">Akral dingin adalah <b>kompensasi</b> (SVR ↑), bukan masalah yang harus dikoreksi.</p><p>Hentikan vasodilator, kendalikan perdarahan dan ganti volume.</p>",
+  "gambar": "<svg viewBox=\"0 0 220 180\"><text x=\"30\" y=\"40\" style=\"font-size:20px\">MAP ≈ CO × SVR</text><text class=\"red\" x=\"38\" y=\"70\" style=\"font-size:18px\">↓↓</text><text class=\"red\" x=\"98\" y=\"70\" style=\"font-size:18px\">↓</text><text class=\"red\" x=\"160\" y=\"70\" style=\"font-size:18px\">↓</text><path d=\"M20 105 q90 -20 180 0 M20 160 q90 20 180 0\"/><path class=\"blue\" d=\"M40 132 h40 M70 124 l10 8 l-10 8 M120 132 h40 M150 124 l10 8 l-10 8\"/><text x=\"70\" y=\"182\" style=\"font-size:11px\">vasodilatasi</text></svg>",
+  "vital": [],
+  "adegan": [
+   {
+    "pembicara": "Narasi",
+    "teks": "Vasodilator menurunkan SVR; karena CO sudah turun akibat preload rendah, MAP anjlok (MAP ≈ CO × SVR). Perfusi otak dan koroner turun, pasien kehilangan kesadaran. Akral dingin adalah kompensasi (SVR ↑), bukan masalah yang harus dikoreksi. Hentikan vasodilator, kendalikan perdarahan dan ganti volume."
+   }
+  ],
+  "efek_vital": null,
+  "pilihan": [
+   {
+    "teks": "Hentikan vasodilator, kendalikan perdarahan dan ganti volume",
+    "tujuan": "A2",
+    "alt": false
+   }
+  ]
+ },
+ {
+  "id": "A4",
+  "nomor": 6,
+  "tipe": "kurang_tepat",
+  "label": "Kurang Tepat",
+  "judul": "Vasopresor Tanpa Volume",
+  "cerita": "<p>Vasopresor menaikkan SVR tetapi <b>tidak menambah volume</b>. Pada hipovolemia, vasokonstriksi tambahan memperburuk perfusi jaringan perifer dan ginjal, dan menaikkan tekanan tanpa menghentikan perdarahan.</p><p class=\"note\">Vasopresor bukan lini pertama pada syok hemoragik; digunakan terbatas bila hipotensi mengancam jiwa saat resusitasi volume berlangsung.</p>",
+  "gambar": "<svg viewBox=\"0 0 220 180\"><path d=\"M15 60 q50 0 70 28 q25 20 50 0 q20 -28 70 -28\"/><path d=\"M15 140 q50 0 70 -28 q25 -20 50 0 q20 28 70 28\"/><path class=\"red\" d=\"M40 100 h18 M48 92 l10 8 l-10 8\"/><text class=\"red\" x=\"70\" y=\"35\">SVR ↑</text><text x=\"62\" y=\"170\">volume tetap kurang</text></svg>",
+  "vital": [],
+  "adegan": [
+   {
+    "pembicara": "Narasi",
+    "teks": "Vasopresor menaikkan SVR tetapi tidak menambah volume . Pada hipovolemia, vasokonstriksi tambahan memperburuk perfusi jaringan perifer dan ginjal, dan menaikkan tekanan tanpa menghentikan perdarahan. Vasopresor bukan lini pertama pada syok hemoragik; digunakan terbatas bila hipotensi mengancam jiwa saat resusitasi volume berlangsung."
+   }
+  ],
+  "efek_vital": null,
+  "pilihan": [
+   {
+    "teks": "Kendalikan perdarahan dan ganti volume",
+    "tujuan": "A2",
+    "alt": false
+   }
+  ]
+ },
+ {
+  "id": "A5",
+  "nomor": 7,
+  "tipe": "berbahaya",
+  "label": "Berbahaya",
+  "judul": "Hanya Observasi",
+  "cerita": "<p>Tanpa kontrol perdarahan dan volume, preload turun terus, simpatis maksimal, aliran ke ginjal dan splangnikus menurun (oliguria), asidosis laktat, lalu <b>dekompensasi (syok ireversibel)</b>.</p><p>Minum juga berisiko bila pasien perlu operasi segera.</p>",
+  "gambar": "<svg viewBox=\"0 0 220 180\"><circle cx=\"50\" cy=\"40\" r=\"13\"/><path d=\"M50 53 v45 h30 v45 M50 70 l25 10 l10 -10\"/><rect x=\"84\" y=\"62\" width=\"10\" height=\"16\" rx=\"2\"/><path d=\"M30 98 h55 M30 98 v50\"/><path d=\"M120 30 v115 h90\"/><path class=\"red\" d=\"M125 45 q25 5 40 30 t40 60\"/><text x=\"128\" y=\"28\">MAP</text></svg>",
+  "vital": [],
+  "adegan": [
+   {
+    "pembicara": "Narasi",
+    "teks": "Tanpa kontrol perdarahan dan volume, preload turun terus, simpatis maksimal, aliran ke ginjal dan splangnikus menurun (oliguria), asidosis laktat, lalu dekompensasi (syok ireversibel) . Minum juga berisiko bila pasien perlu operasi segera."
+   }
+  ],
+  "efek_vital": null,
+  "pilihan": [
+   {
+    "teks": "Segera kendalikan perdarahan dan ganti volume",
+    "tujuan": "A2",
+    "alt": false
+   }
+  ]
+ },
+ {
+  "id": "A6",
+  "nomor": 8,
+  "tipe": "evaluasi",
+  "label": "Evaluasi",
+  "judul": "Evaluasi Kasus A",
+  "cerita": "<p>Setelah operasi, pasien stabil. <b>Diskusikan:</b></p><ol><li>Mengapa tekanan nadi menyempit pada awal syok?</li><li>Mengapa hematokrit awal dapat tampak normal?</li><li>Bagaimana kurva venous return bergeser pada perdarahan dan pada pemberian darah?</li><li>Mengapa kristaloid dalam jumlah besar dapat merugikan?</li></ol>",
+  "gambar": "<svg viewBox=\"0 0 220 180\"><rect x=\"55\" y=\"20\" width=\"110\" height=\"150\" rx=\"8\"/><rect x=\"85\" y=\"12\" width=\"50\" height=\"18\" rx=\"4\"/><path class=\"blue\" d=\"M70 60 l6 6 l10 -12 M70 95 l6 6 l10 -12 M70 130 l6 6 l10 -12\"/><path d=\"M95 60 h55 M95 95 h55 M95 130 h55\"/></svg>",
+  "vital": [],
+  "adegan": [
+   {
+    "pembicara": "Narasi",
+    "teks": "Setelah operasi, pasien stabil. Diskusikan: Mengapa tekanan nadi menyempit pada awal syok? Mengapa hematokrit awal dapat tampak normal? Bagaimana kurva venous return bergeser pada perdarahan dan pada pemberian darah? Mengapa kristaloid dalam jumlah besar dapat merugikan?"
+   }
+  ],
+  "efek_vital": null,
+  "pilihan": []
+ }
+]

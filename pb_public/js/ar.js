@@ -240,10 +240,15 @@
   function loadModelToOverlay(marker) {
     if (!renderer) ensure3D();
     if (!renderer) { App.toast("Renderer 3D belum siap."); return; }
-    var gk = (window.CONFIG && CONFIG.modelGLB) || {};
-    var url = gk[marker.model];
-    if (!url) { App.toast("Path GLB belum diset untuk model " + marker.model); return; }
-    if (model3d) { scene3d.remove(model3d); model3d = null; }
+    var asset = marker.aset_3d || null;
+    if (!asset || !asset.file_glb) { App.toast("Marker belum memiliki aset GLB."); return; }
+    PB.fileUrl("aset_3d", asset.id, asset.file_glb).then(function (url) {
+      loadModelUrl(marker, url);
+    }).catch(function (err) { App.toast("Gagal membuat URL file: " + err.message); });
+  }
+
+  function loadModelUrl(marker, url) {
+    var cacheKey = marker.aset_3d ? marker.aset_3d.id : marker.model;
     var finish = function (obj) {
       obj.scale.setScalar(1.6);
       obj.position.set(0, 0, 0);
@@ -256,7 +261,7 @@
       var st = document.getElementById("arStatus");
       if (st) { st.textContent = "Model " + marker.nama + " tampil"; st.className = "ar-status found"; }
     };
-    if (glbCache[marker.model]) { finish(glbCache[marker.model].clone(true)); return; }
+    if (glbCache[cacheKey]) { finish(glbCache[cacheKey].clone(true)); return; }
     if (!gltfLoader) {
       if (window.THREE && THREE.GLTFLoader) gltfLoader = new THREE.GLTFLoader();
       else if (window.GLTFLoader) gltfLoader = new window.GLTFLoader();
@@ -265,7 +270,7 @@
     gltfLoader.load(url, function (gltf) {
       var root = gltf.scene || (gltf.scenes && gltf.scenes[0]);
       if (!root) { App.toast("GLB tidak berisi scene."); return; }
-      glbCache[marker.model] = root;
+      glbCache[cacheKey] = root;
       finish(root.clone(true));
     }, function (progress) {
       if (progress.total) {
@@ -338,16 +343,11 @@
     // controller: objek hanya bergerak via panel / tarikan canvas
     ctrl = new TransformController(null, cam);
     bindCanvasDrag(cv);
-    var gk = (window.CONFIG && CONFIG.modelGLB) || {};
-    var url = gk[window.DATA_MARKER[0].model];
-    var obj = null;
-    if (url && gltfLoader) {
-      gltfLoader.load(url, function (gltf) {
-        obj = gltf.scene || gltf.scenes[0];
-        sc.add(obj);
-        ctrl.attach(obj);
-      }, undefined, function () { App.toast("Gagal memuat GLB."); });
-    }
+    var asset = (window.DATA_MARKER && window.DATA_MARKER[0]) ? window.DATA_MARKER[0].aset_3d : null;
+    if (!asset || !asset.file_glb) { App.toast("Belum ada aset GLB untuk marker pertama."); return; }
+    PB.fileUrl("aset_3d", asset.id, asset.file_glb).then(function (url) {
+      loadModelUrl(window.DATA_MARKER[0], url);
+    }).catch(function (err) { App.toast("Gagal membuat URL file: " + err.message); });
     // bar Reset + Zoom, panel geser/putar di bawahnya (kanan atas)
     var bar = document.createElement("div");
     bar.className = "flex gap-1 absolute top-3 right-3 z-10";
