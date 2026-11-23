@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "nilai_barcode": 1,
+    "nama": "Jantung dan Katup",
+    "pertemuan_terkait": [
+      2
+    ],
+    "model": "jantung",
+    "deskripsi": "Jantung empat ruang dengan katup atrioventrikular dan semilunar. Struktur berdenyut mengikuti irama jantung.",
+    "lapisan": [
+      {
+        "kunci": "ruang",
+        "nama": "Empat ruang",
+        "on": true
+      },
+      {
+        "kunci": "katup",
+        "nama": "Katup",
+        "on": true
+      },
+      {
+        "kunci": "pembuluh",
+        "nama": "Pembuluh besar",
+        "on": false
+      }
+    ]
+  }
+]

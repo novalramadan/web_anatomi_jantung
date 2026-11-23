@@ -1,0 +1,9 @@
+# PocketBase runtime data — safe to delete for a full reset
+backend/pb_data/
+
+# OS cruft
+Thumbs.db
+.DS_Store
+
+# Node tooling used only for migration generation / verification
+backend/tools/node_modules/
