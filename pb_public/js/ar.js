@@ -324,7 +324,7 @@
       return;
     }
     vw.innerHTML =
-      '<div class="mb-4"><div class="eyebrow mb-2">Mode 3D</div><h3>Model Jantung — geser, putar &amp; zoom</h3></div>' +
+      '<div class="mb-4" style="color:#fff;text-align:center"><div class="eyebrow mb-2">Mode 3D</div><h3 style="color:#fff">Model Jantung — geser, putar &amp; zoom</h3></div>' +
       '<div class="viewer3d" id="viewer3d" style="height:460px"><div class="hint3d">Putar kamera: seret latar · gulir: zoom</div></div>';
     var el = document.getElementById("viewer3d");
     var cv = document.createElement("canvas");

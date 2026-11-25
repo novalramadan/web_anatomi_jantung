@@ -1,4 +1,4 @@
-/* js/profil.js — Profil: statistik, lencana, pengaturan (font, tema, suara), impor/ekspor, reset. */
+/* js/profil.js — Profil: statistik, lencana, dan pengaturan. */
 (function () {
   "use strict";
 
@@ -67,18 +67,6 @@
       '<label class="flex items-center gap-3"><input type="checkbox" id="soundCk"' + (s.suara !== false ? " checked" : "") + ' style="accent-color:var(--brand)"><span>Efek suara (jika tersedia)</span></label>' +
       '</div>';
 
-    // ekspor / impor
-    html += '<div class="surface-card mt-4 p-5"><h3 class="mb-2">Ekspor & Impor Materi/Soal Tambahan</h3>' +
-      '<p class="small muted">Ekspor progres kamu ke berkas. Impor JSON tambahan dari dosen untuk menambah materi atau soal (tidak menimpa data bawaan).</p>' +
-      '<div class="mt-3 flex flex-wrap gap-3"><button class="btn" id="expProgres" type="button">Ekspor Progres (JSON)</button>' +
-      '<button class="btn" id="expData" type="button">Ekspor Soal+Materi Saat Ini</button></div>' +
-      '<label class="field mt-4"><span class="lbl">Impor berkas JSON (progres, materi, atau soal tambahan)</span><input type="file" id="impFile" class="input" accept="application/json,.json" aria-label="Pilih berkas JSON"></label>' +
-      '<div id="impMsg" class="small" aria-live="polite"></div></div>';
-
-    // reset
-    html += '<div class="surface-card mt-4 p-5"><h3 class="mb-2 text-danger">Reset Data</h3><p class="small muted">Menghapus seluruh progres, kuis, kasus, dan refleksi dari perangkat ini. Tindakan ini tidak dapat dibatalkan.</p>' +
-      '<button class="btn btn-danger" id="resetBtn" type="button">Hapus Semua Data</button></div>';
-
     app.innerHTML = html;
 
     // bindings
@@ -93,86 +81,6 @@
       Storage.update(function (pp) { pp.pengaturan.suara = this.checked; }.bind(this));
     });
 
-    document.getElementById("expProgres").addEventListener("click", function () {
-      downloadJSON(Storage.load(), "Medical-U_progres.json");
-    });
-    document.getElementById("expData").addEventListener("click", function () {
-      downloadJSON({ soal: window.DATA_SOAL, esai: window.DATA_ESAI, pertemuan: window.DATA_PERTEMUAN.map(function (m) { return { id: m.id, judul: m.judul, blok: m.blok }; }) }, "Medical-U_data.json");
-    });
-    document.getElementById("impFile").addEventListener("change", function (e) {
-      var f = e.target.files[0]; if (!f) return;
-      var msg = document.getElementById("impMsg");
-      var reader = new FileReader();
-      reader.onload = function () {
-        try {
-          var obj = JSON.parse(reader.result);
-          var added = importJSON(obj);
-          msg.innerHTML = '<span class="badge badge-success">Impor sukses: ' + added + ' item.</span>';
-          App.toast("Impor berhasil (" + added + " item).");
-        } catch (err) {
-          msg.innerHTML = '<span class="badge badge-danger">Gagal: ' + App.escapeHtml(err.message) + '</span>';
-          App.toast("Impor gagal — format JSON tidak valid.");
-        }
-      };
-      reader.readAsText(f);
-    });
-
-    document.getElementById("resetBtn").addEventListener("click", function () {
-      if (!confirm("Hapus seluruh data Medical-U di perangkat ini? Tindakan ini tidak dapat dibatalkan.")) return;
-      if (!confirm("Yakin? Semua progres, kuis, kasus, esai, dan refleksi akan hilang.")) return;
-      Storage.reset();
-      App.toast("Semua data dihapus.");
-      App.render();
-    });
-  }
-
-  function downloadJSON(obj, filename) {
-    var blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
-    var a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 0);
-    App.toast("Berkas " + filename + " diunduh.");
-  }
-
-  function importJSON(obj) {
-    var count = 0;
-    // progres
-    if (obj.materi_selesai && Array.isArray(obj.materi_selesai)) {
-      Storage.update(function (p) {
-        obj.materi_selesai.forEach(function (id) { if (p.materi_selesai.indexOf(id) === -1) p.materi_selesai.push(id); });
-      });
-      count += obj.materi_selesai.length;
-    }
-    if (obj.skor_kuis && typeof obj.skor_kuis === "object") {
-      Storage.update(function (p) {
-        Object.keys(obj.skor_kuis).forEach(function (k) {
-          var v = obj.skor_kuis[k];
-          if (!v || typeof v.persen !== "number") return;
-          if (!p.skor_kuis[k] || v.persen > p.skor_kuis[k].persen) p.skor_kuis[k] = v;
-        });
-      });
-      count += Object.keys(obj.skor_kuis).length;
-    }
-    // soal tambahan
-    if (obj.soal && Array.isArray(obj.soal)) {
-      var extra = window.DATA_SOAL || [];
-      obj.soal.forEach(function (s) {
-        if (!extra.find(function (x) { return x.id === s.id; })) extra.push(s);
-      });
-      window.DATA_SOAL = extra;
-      Storage.update(function (p) { p.impSoal = p.impSoal || []; p.impSoal = p.impSoal.concat(obj.soal.map(function (x) { return x.id; })); });
-      count += obj.soal.length;
-    }
-    // materi tambahan
-    if (obj.pertemuan_tambahan && Array.isArray(obj.pertemuan_tambahan)) {
-      window._pertemuanTambahan = (window._pertemuanTambahan || []).concat(obj.pertemuan_tambahan);
-      count += obj.pertemuan_tambahan.length;
-    }
-    if (count === 0) throw new Error("Berkas tidak berisi progres/soal/materi yang dikenal.");
-    return count;
   }
 
   App.add("profil", render);
