@@ -107,7 +107,7 @@
     '</div>' +
     '<div class="mb-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">' +
       modCard('t1', 'Materi', 'Materi', '16 pertemuan, 5 blok. Ringkasan, tujuan, konsep inti, korelasi klinis.', done + ' / ' + total + ' selesai', P.book) +
-      modCard('t2', 'Kuis', 'Kuis', '41 soal PG, 6 esai, mode latihan &amp; ujian. Daftar remedial otomatis.', kuisTertinggi + '% terbaik', P.quiz) +
+      modCard('t2', 'Kuis', 'Kuis', '41 soal PG, mode latihan &amp; ujian otomatis.', kuisTertinggi + '% terbaik', P.quiz) +
       modCard('t3', 'Visual Novel', 'vn', 'Kasus kardiovaskular bercabang. Keputusanmu mengubah monitor pasien.', kasusSelesai + ' / ' + kasusTotal + ' selesai', P.vn) +
       modCard('t4', 'AR Scanner', 'ar', 'Arahkan kamera ke marker barcode. Model 3D jantung muncul di tanganmu.', markerDip + ' / ' + markerTotal + ' marker', P.ar) +
     '</div>' +
@@ -146,7 +146,7 @@
       '<div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">' +
         feat(P.book, 'Materi Terstruktur', '16 pertemuan dalam 5 blok yang runtut.') +
         feat(P.cube, 'Visual 3D &amp; AR', 'Jelajahi anatomi jantung dari berbagai sudut.') +
-        feat(P.target, 'Kuis Adaptif', 'Mode latihan, ujian, dan remedial otomatis.') +
+        feat(P.target, 'Kuis Adaptif', 'Mode latihan dan ujian otomatis.') +
         feat(P.pulse, 'Kasus Klinis', 'Keputusan bercabang yang melatih penalaran.') +
       '</div>' +
     '</section>' +

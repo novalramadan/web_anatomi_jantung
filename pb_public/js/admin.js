@@ -18,10 +18,6 @@
       ["pertanyaan", "T", "Pertanyaan", true], ["opsi", "J", "Opsi (JSON {A..E})"],
       ["kunci", "S", "Kunci", false, ["A", "B", "C", "D", "E"]],
       ["pembahasan", "T", "Pembahasan"], ["gambar", "F", "Gambar"]],
-    esai: [
-      ["id_lokal", "N", "ID lokal", true], ["pertemuan_terkait", "J", "Pertemuan terkait (JSON array)"],
-      ["pertanyaan", "T", "Pertanyaan", true], ["jawaban_model", "T", "Jawaban model"],
-      ["checklist", "J", "Checklist (JSON)"]],
     kasus: [
       ["id_lokal", "T", "ID lokal (teks)", true], ["judul", "T", "Judul", true],
       ["ringkasan", "T", "Ringkasan"], ["status_validasi", "T", "Status validasi"],
@@ -39,14 +35,14 @@
     pustaka: [["kutipan", "T", "Kutipan", true]]
   };
   var LABELS = {
-    pertemuan: "Pertemuan", soal: "Soal", esai: "Esai", kasus: "Kasus",
+    pertemuan: "Pertemuan", soal: "Soal", kasus: "Kasus",
     marker: "Marker AR", aset_3d: "Aset 3D", glosarium: "Glosarium",
     rumus: "Rumus", normal: "Nilai normal", pustaka: "Pustaka"
   };
   // PocketBase 0.40 rejects `sort=-created` on these collections. Collections
   // with id_lokal use it; the rest keep PocketBase's default order.
   var SORT = {
-    pertemuan: "id_lokal", soal: "id_lokal", esai: "id_lokal",
+    pertemuan: "id_lokal", soal: "id_lokal",
     kasus: "id_lokal", marker: "id_lokal"
   };
   var selected = "pertemuan";

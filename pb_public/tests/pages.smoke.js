@@ -27,16 +27,10 @@ const idContracts = [
   ["js/kuis.js", "mixN"],
   ["js/kuis.js", "mixL"],
   ["js/kuis.js", "mixStart"],
-  ["js/kuis.js", "remedialStart"],
   ["js/kuis.js", "quitQuiz"],
   ["js/kuis.js", "nextBtn"],
   ["js/kuis.js", "timerBadge"],
   ["js/kuis.js", "retryBtn"],
-  ["js/kuis.js", "esaiInput"],
-  ["js/kuis.js", "esaiSave"],
-  ["js/kuis.js", "esaiModel"],
-  ["js/kuis.js", "ckBar"],
-  ["js/kuis.js", "ckScore"],
   // vn
   ["js/vn.js", "vnShelf"],
   ["js/vn.js", "vnLog"],
@@ -111,7 +105,6 @@ const attrContracts = [
   ["js/admin.js", "data-edit"],
   ["js/admin.js", "data-del"],
   ["js/admin.js", "data-field"],
-  ["js/kuis.js", "data-ck"],
 ];
 for (const [jsFile, attr] of attrContracts) {
   const src = read(jsFile);

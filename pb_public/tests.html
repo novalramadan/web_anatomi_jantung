@@ -27,7 +27,7 @@
 </head>
 <body>
   <div class="section-head"><div class="eyebrow">Uji Otomatis</div><h1>Medical-U — Validasi Data & Alur</h1>
-  <p class="small muted">Menjalankan uji pada data bawaan (pertemuan, soal, esai, kasus, marker) tanpa backend.</p></div>
+  <p class="small muted">Menjalankan uji pada data bawaan (pertemuan, soal, kasus, marker) tanpa backend.</p></div>
 
   <div class="btn-row"><button class="btn btn-primary" id="runBtn" type="button">Jalankan Uji</button>
   <button class="btn" id="exportBtn" type="button">Ekspor Hasil (JSON)</button></div>
@@ -40,7 +40,6 @@
   <script src="data/pertemuan.js"></script>
   <script src="data/glosarium.js"></script>
   <script src="data/soal.js"></script>
-  <script src="data/esai.js"></script>
   <script src="data/kasus.js"></script>
   <script src="data/marker.js"></script>
   <script>
@@ -96,12 +95,6 @@
       add("Id soal unik", dupS === S.length);
       var badLv = S.filter(function (s) { return ["C2","C3","C4"].indexOf(s.level) === -1; });
       add("Level soal valid (C2/C3/C4)", badLv.length === 0, badLv.map(function (s) { return "S" + s.id; }).join(","));
-
-      // ---- esai ----
-      var E = D.DATA_ESAI;
-      add("Tepat 6 esai", E.length === 6, "ditemukan " + E.length);
-      var badEsai = E.filter(function (e) { return !e.pertanyaan || !e.jawaban_model || !e.checklist || !e.checklist.length; });
-      add("Esai punya jawaban model & checklist", badEsai.length === 0);
 
       // ---- kasus ----
       var K = D.DATA_KASUS;

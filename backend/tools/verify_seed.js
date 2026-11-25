@@ -62,14 +62,14 @@ async function superLogin() {
   console.log("\n== Collection schema & seed counts ==");
   const su = await superLogin();
   const cols = await api("GET", "/api/collections?perPage=100", { token: su });
-  const expected = ["users", "pertemuan", "soal", "esai", "kasus", "marker", "aset_3d",
+  const expected = ["users", "pertemuan", "soal", "kasus", "marker", "aset_3d",
                     "glosarium", "rumus", "normal", "pustaka", "progres"];
   const byName = {};
   for (const c of (cols.data.items || [])) byName[c.name] = c;
   for (const n of expected) check("collection exists: " + n, !!byName[n]);
 
   const idxOf = (c, needle) => (c.indexes || []).some((i) => String(i).includes(needle));
-  for (const n of ["pertemuan", "soal", "esai", "kasus", "marker"]) {
+  for (const n of ["pertemuan", "soal", "kasus", "marker"]) {
     check(n + " has unique id_lokal index", byName[n] && idxOf(byName[n], `idx_${n}_id_lokal`));
   }
 

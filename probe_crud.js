@@ -26,7 +26,6 @@ const req = (p, o = {}) => fetch(BASE + p, o).then(parse);
     aset_3d:   { nama: "uji", keterangan: "" },               // keterangan "" dikirim?
     rumus:     { nama: "uji", rumus: "", keterangan: "" },
     normal:    { parameter: "uji", nilai_normal: "" },
-    esai:      { id_lokal: null, pertanyaan: "uji", pertemuan_terkait: null, checklist: null },
   };
 
   for (const [coll, body] of Object.entries(payloads)) {

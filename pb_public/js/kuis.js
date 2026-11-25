@@ -1,4 +1,4 @@
-﻿/* js/kuis.js — kuis pilihan ganda (latihan/ujian), esai penalaran, daftar remedial. */
+﻿/* js/kuis.js — kuis pilihan ganda (latihan/ujian) dan kuis campuran. */
 (function () {
   "use strict";
 
@@ -41,17 +41,13 @@
     });
     html += '</div></div>';
 
-    // kuis campuran + remedial + esai
+    // kuis campuran
     html += '<div class="grid gap-4">';
     html += '<div class="surface-card p-5"><div class="mb-3"><h3 class="m-0">Kuis Campuran</h3></div>' +
       '<label class="field"><span class="lbl">Pertemuan</span><select id="mixP" class="input"><option value="0">Semua</option>' + window.DATA_PERTEMUAN.filter(function (m) { return !m.label_integrasi; }).map(function (m) { return '<option value="' + m.id + '">P' + m.id + ' · ' + App.escapeHtml(m.judul) + '</option>'; }).join('') + '</select></label>' +
       '<label class="field"><span class="lbl">Jumlah soal</span><select id="mixN" class="input"><option selected>10</option></select></label>' +
       '<label class="field"><span class="lbl">Level</span><select id="mixL" class="input"><option value="">Semua</option><option value="C2">C2</option><option value="C3">C3</option><option value="C4">C4</option></select></label>' +
       '<button class="btn btn-primary btn-block" id="mixStart" type="button">Mulai Kuis Campuran</button></div>';
-    var salah = p.soal_salah || [];
-    html += '<div class="surface-card p-5"><div class="mb-3 flex items-center justify-between gap-3"><h3 class="m-0">Daftar Remedial</h3><span class="badge">' + salah.length + ' soal</span></div>' +
-      (salah.length ? '<p class="small muted">Soal yang pernah salah, siap dilatih ulang.</p><button class="btn btn-primary btn-block" id="remedialStart" type="button" style="background:var(--success);box-shadow:0 6px 18px -6px color-mix(in srgb, var(--success) 55%, transparent)">Latih ' + salah.length + ' Soal Salah</button>' : '<p class="small muted">Belum ada soal salah. Kerjakan kuis dulu.</p>') + '</div>';
-    html += '<div class="surface-card p-5"><div class="mb-3 flex items-center justify-between gap-3"><h3 class="m-0">Esai Penalaran</h3><span class="badge">' + window.DATA_ESAI.length + ' soal</span></div><p class="small muted">Tulis jawaban, bandingkan dengan jawaban model, lalu nilai dirimu dengan checklist.</p><a class="btn btn-block" href="#/kuis/esai">Buka Esai</a></div>';
     html += '</div></div>';
 
     app.innerHTML = html;
@@ -68,12 +64,6 @@
       startSession(app, App.shuffle(pool).slice(0, n), { mode: "latihan", judul: "Kuis Campuran" });
     });
 
-    var remBtn = document.getElementById("remedialStart");
-    if (remBtn) remBtn.addEventListener("click", function () {
-      var ids = (Storage.load().soal_salah || []);
-      var pool = window.DATA_SOAL.filter(function (s) { return ids.indexOf(s.id) !== -1; });
-      if (pool.length) startSession(app, App.shuffle(pool), { mode: "latihan", judul: "Remedial" });
-    });
   }
 
   // ---------- sesi soal ----------
@@ -223,17 +213,6 @@
     var s = state.soal[state.idx];
     var benar = L === s.kunci;
     state.jawaban[state.idx] = { id: s.id, pilih: L, benar: benar };
-    if (!benar) {
-      Storage.update(function (p) {
-        if (p.soal_salah.indexOf(s.id) === -1) p.soal_salah.push(s.id);
-      });
-    } else {
-      // keluar dari daftar remedial bila benar
-      Storage.update(function (p) {
-        var i = p.soal_salah.indexOf(s.id);
-        if (i !== -1) p.soal_salah.splice(i, 1);
-      });
-    }
     var app = document.getElementById("app");
     renderSoal(app);
   }
@@ -250,9 +229,6 @@
         var s = state.soal[state.idx];
         if (!state.jawaban[state.idx]) {
           state.jawaban[state.idx] = { id: s.id, pilih: null, benar: false };
-          Storage.update(function (p) {
-            if (p.soal_salah.indexOf(s.id) === -1) p.soal_salah.push(s.id);
-          });
         }
         stopTimer();
         var app2 = document.getElementById("app");
@@ -287,7 +263,7 @@
     });
 
     var pids = Object.keys(perP).map(Number);
-    if (pids.length === 1 && state.judul.indexOf("Campuran") === -1 && state.judul.indexOf("Remedial") === -1) {
+    if (pids.length === 1 && state.judul.indexOf("Campuran") === -1) {
       var pid = pids[0];
       Storage.update(function (p) {
         var old = p.skor_kuis[pid];
@@ -326,79 +302,16 @@
     app.innerHTML = html;
 
     document.getElementById("retryBtn").addEventListener("click", function () {
-      var pool;
-      if (state.judul === "Remedial") {
-        pool = window.DATA_SOAL.filter(function (s) { return salahList.map(function (x) { return x.id; }).indexOf(s.id) !== -1; });
-      } else {
-        pool = state.soal.map(function (s) { return window.DATA_SOAL.find(function (x) { return x.id === s.id; }); });
-      }
+      var pool = state.soal.map(function (s) { return window.DATA_SOAL.find(function (x) { return x.id === s.id; }); });
       startSession(app, App.shuffle(pool.filter(Boolean)), { mode: state.mode, judul: state.judul });
     });
 
     state = null;
   }
 
-  // ---------- esai ----------
-  function renderEsai(app, params) {
-    var id = Number(params[0]) || 1;
-    var e = App.byId(window.DATA_ESAI, id);
-    if (!e) { app.innerHTML = '<p>Esai tidak ditemukan.</p>'; return; }
-    var p = Storage.load();
-    var saved = (p.esai_jawaban || {})[e.id] || "";
-    var showModel = params[1] === "model";
-
-    var html = '<div class="mb-6"><div class="eyebrow mb-2"><span>Esai Penalaran</span></div><h1>Esai ' + e.id + ' dari ' + window.DATA_ESAI.length + '</h1>' +
-      '<div class="mt-2 flex flex-wrap gap-2">' + e.pertemuan.map(function (x) { return '<a class="badge no-underline" href="#/materi/' + x + '">P' + x + '</a>'; }).join('') + '</div></div>';
-
-    html += '<div class="surface-card p-5 sm:p-6"><p class="mb-4 text-[1.06rem] font-semibold leading-relaxed">' + App.escapeHtml(e.pertanyaan) + '</p>' +
-      '<label class="field"><span class="lbl">Jawabanmu (tersimpan otomatis di perangkat ini)</span>' +
-      '<textarea id="esaiInput" class="input" aria-label="Jawaban esai" placeholder="Tulis penalaranmu: mekanisme, arah perubahan, dan alasan…">' + App.escapeHtml(saved) + '</textarea></label>' +
-      '<div class="flex flex-wrap gap-3"><button class="btn btn-primary" id="esaiSave" type="button">Simpan Jawaban</button>' +
-      (showModel ? '' : '<button class="btn btn-primary" id="esaiModel" type="button" style="background:var(--success);box-shadow:0 6px 18px -6px color-mix(in srgb, var(--success) 55%, transparent)">Buka Jawaban Model</button>') + '</div></div>';
-
-    if (showModel) {
-      html += '<div class="surface-card mt-4 p-5"><h3 class="mb-2">Jawaban Model</h3><p>' + App.escapeHtml(e.jawaban_model) + '</p></div>';
-      html += '<div class="surface-card mt-4 p-5"><h3 class="mb-1">Nilai Dirimu — checklist poin</h3><p class="small muted">Centang poin yang ada di jawabanmu, lalu bandingkan dengan skor.</p><div id="checklist">';
-      e.checklist.forEach(function (c, i) {
-        html += '<label class="flex items-start gap-3 py-1"><input type="checkbox" data-ck="' + i + '" class="mt-1 h-[18px] w-[18px]" style="accent-color:var(--brand)"><span>' + App.escapeHtml(c) + '</span></label>';
-      });
-      html += '</div><div class="bar lg mt-3" id="ckBar" aria-hidden="true"><i style="width:0%"></i></div><p class="small mt-2" id="ckScore">0 dari ' + e.checklist.length + ' poin</p></div>';
-    }
-
-    var nav = '<div class="mt-5 flex flex-wrap gap-3">';
-    if (e.id > 1) nav += '<a class="btn" href="#/kuis/esai/' + (e.id - 1) + '">← Esai ' + (e.id - 1) + '</a>';
-    if (e.id < window.DATA_ESAI.length) nav += '<a class="btn" href="#/kuis/esai/' + (e.id + 1) + '">Esai ' + (e.id + 1) + ' →</a>';
-    nav += '<a class="btn btn-ghost" href="#/kuis">Kembali ke Kuis</a></div>';
-    html += nav;
-
-    app.innerHTML = html;
-
-    var input = document.getElementById("esaiInput");
-    input.addEventListener("input", function () {
-      Storage.update(function (pp) { pp.esai_jawaban = pp.esai_jawaban || {}; pp.esai_jawaban[e.id] = input.value; });
-    });
-    document.getElementById("esaiSave").addEventListener("click", function () {
-      Storage.update(function (pp) { pp.esai_jawaban = pp.esai_jawaban || {}; pp.esai_jawaban[e.id] = input.value; });
-      App.toast("Jawaban esai disimpan.");
-    });
-    var mb = document.getElementById("esaiModel");
-    if (mb) mb.addEventListener("click", function () { App.navigate("#/kuis/esai/" + e.id + "/model"); });
-
-    if (showModel) {
-      var boxes = app.querySelectorAll("[data-ck]");
-      function upd() {
-        var n = app.querySelectorAll("[data-ck]:checked").length;
-        document.getElementById("ckBar").firstElementChild.style.width = App.pct(n, e.checklist.length) + "%";
-        document.getElementById("ckScore").textContent = n + " dari " + e.checklist.length + " poin";
-      }
-      boxes.forEach(function (b) { b.addEventListener("change", upd); });
-    }
-  }
-
   // ---------- router ----------
   App.add("kuis", function (app, params) {
     if (!params || !params.length) { renderPick(app); return; }
-    if (params[0] === "esai") { renderEsai(app, params.slice(1)); return; }
     if (params[0] === "p") {
       var pid = Number(params[1]);
       var m = App.byId(window.DATA_PERTEMUAN, pid);

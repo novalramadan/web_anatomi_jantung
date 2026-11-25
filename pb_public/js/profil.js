@@ -30,8 +30,6 @@
     var kuisDiambil = Object.keys(p.skor_kuis).length;
     var rataRata = kuisDiambil ? Math.round(Object.keys(p.skor_kuis).reduce(function (a, k) { return a + p.skor_kuis[k].persen; }, 0) / kuisDiambil) : 0;
     var kasus = Object.keys(p.kasus_selesai).length;
-    var remedial = (p.soal_salah || []).length;
-    var esaiTerjawab = Object.keys(p.esai_jawaban || {}).filter(function (k) { return (p.esai_jawaban[k] || "").trim().length; }).length;
 
     function statCard(v, label) {
       return '<div class="stat"><span class="k">' + v + '</span><span class="v">' + label + '</span></div>';
@@ -55,13 +53,11 @@
     html += '<div class="surface-card p-5"><h3 class="mb-3">Identitas</h3><label class="field"><span class="lbl">' + App.escapeHtml(idLabel) + '</span><input type="text" id="namaPemain" class="input" value="' + App.escapeHtml(p.nama_pemain || "") + '" placeholder="' + App.escapeHtml(idPlaceholder) + '"></label></div>';
 
     // statistik
-    html += '<div class="surface-card mt-4 p-5"><h3 class="mb-3">Statistik</h3><div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">' +
+    html += '<div class="surface-card mt-4 p-5"><h3 class="mb-3">Statistik</h3><div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">' +
       statCard(done + "/" + total, "Materi selesai") +
       statCard(kuisDiambil, "Kuis diambil") +
       statCard(rataRata + "%", "Rata-rata skor") +
       statCard(kasus + "/" + window.DATA_KASUS.length, "Kasus selesai") +
-      statCard(remedial, "Soal remedial") +
-      statCard(esaiTerjawab + "/" + window.DATA_ESAI.length, "Esai terjawab") +
       '</div>' +
       '<div class="mt-4"><div class="small dim mb-1">Progres keseluruhan</div><div class="bar lg"><i style="width:' + App.totalProgress() + '%"></i></div></div></div>';
 

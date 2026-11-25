@@ -15,8 +15,7 @@ global.DATA_SOAL = [
     opsi: { A: "Paralel", B: "Seri", C: "Campuran", D: "Resistensi sama", E: "Tekanan sama" },
     kunci: "B", pembahasan: "pembahasan soal 1", gambar: "assets/img/Sick.jpg", keterangan_gambar: "Ilustrasi pasien" }
 ];
-global.DATA_ESAI = [];
-const storageState = { materi_selesai: [], skor_kuis: {}, soal_salah: [], esai_jawaban: {}, kasus_selesai: {}, marker_dipindai: [], refleksi: {}, pengaturan: { mode: "terang" } };
+const storageState = { materi_selesai: [], skor_kuis: {}, kasus_selesai: {}, marker_dipindai: [], refleksi: {}, pengaturan: { mode: "terang" } };
 global.Storage = { load: () => JSON.parse(JSON.stringify(storageState)), update: (fn) => fn(storageState) };
 global.document = {
   getElementById: () => null,

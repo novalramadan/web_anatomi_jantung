@@ -22,7 +22,7 @@ async function api(url, token, options = {}) {
   // ---- load source data via Node vm (same extraction as build script) ----
   const ctx = { window: {} };
   vm.createContext(ctx);
-  for (const name of ["pertemuan", "soal", "esai", "kasus", "marker", "glosarium"]) {
+  for (const name of ["pertemuan", "soal", "kasus", "marker", "glosarium"]) {
     vm.runInContext(fs.readFileSync(path.join(ROOT, "cardioverse", "data", name + ".js"), "utf8"), ctx);
   }
   const W = ctx.window;
@@ -104,24 +104,6 @@ async function api(url, token, options = {}) {
       if ((r.pembahasan || "") !== (s.pembahasan || "")) bad.push(`id ${s.id} pembahasan`);
     }
     cmp("soal content parity", bad.length === 0, bad.slice(0, 6).join("; ") || "all fields match");
-  }
-
-  // ---------- esai ----------
-  {
-    const src = W.DATA_ESAI;
-    const db = await allItems("esai");
-    cmp("esai count", db.length === src.length, `db=${db.length} src=${src.length}`);
-    const byId = Object.fromEntries(db.map((r) => [String(r.id_lokal), r]));
-    let bad = [];
-    for (const e of src) {
-      const r = byId[String(e.id)];
-      if (!r) { bad.push(`missing id ${e.id}`); continue; }
-      if (!deepEq(r.pertemuan_terkait, e.pertemuan || [])) bad.push(`id ${e.id} pertemuan_terkait`);
-      if (r.pertanyaan !== e.pertanyaan) bad.push(`id ${e.id} pertanyaan`);
-      if ((r.jawaban_model || "") !== (e.jawaban_model || "")) bad.push(`id ${e.id} jawaban_model`);
-      if (!deepEq(r.checklist, e.checklist || [])) bad.push(`id ${e.id} checklist`);
-    }
-    cmp("esai content parity", bad.length === 0, bad.slice(0, 6).join("; ") || "all fields match");
   }
 
   // ---------- kasus ----------

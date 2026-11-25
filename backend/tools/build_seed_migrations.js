@@ -27,7 +27,7 @@ fs.mkdirSync(MIG_DIR, { recursive: true });
 // ---------- Load data ----------
 const ctx = { window: {} };
 vm.createContext(ctx);
-for (const name of ["pertemuan", "soal", "esai", "kasus", "marker", "glosarium"]) {
+for (const name of ["pertemuan", "soal", "kasus", "marker", "glosarium"]) {
   vm.runInContext(fs.readFileSync(path.join(DATA_DIR, name + ".js"), "utf8"), ctx, { filename: name + ".js" });
 }
 const W = ctx.window;
@@ -36,7 +36,6 @@ const L = W.DATA_LAMPIRAN;
 const counts = {
   pertemuan: W.DATA_PERTEMUAN.length,
   soal: W.DATA_SOAL.length,
-  esai: W.DATA_ESAI.length,
   kasus: W.DATA_KASUS.length,
   marker: W.DATA_MARKER.length,
   glosarium: L.glosarium.length,
@@ -105,14 +104,6 @@ migrate((app) => {
         mimeTypes: [".jpg", ".jpeg", ".png", ".webp", ".gif", "image/jpeg", "image/png", "image/webp", "image/gif"] },
     ], ["CREATE UNIQUE INDEX idx_soal_id_lokal ON soal (id_lokal)"]),
 
-    base("esai", [
-      { name: "id_lokal", type: "number", required: true },
-      { name: "pertemuan_terkait", type: "json", maxSize: 10000 },
-      { name: "pertanyaan", type: "text", required: true, max: 4000 },
-      { name: "jawaban_model", type: "text", max: 8000 },
-      { name: "checklist", type: "json", maxSize: 40000 },
-    ], ["CREATE UNIQUE INDEX idx_esai_id_lokal ON esai (id_lokal)"]),
-
     base("kasus", [
       { name: "id_lokal", type: "text", required: true, max: 20 },
       { name: "judul", type: "text", required: true, max: 400 },
@@ -175,7 +166,7 @@ migrate((app) => {
     }));
   }
 }, (app) => {
-  for (const name of ["progres", "pustaka", "normal", "rumus", "glosarium", "marker", "kasus", "esai", "soal", "pertemuan", "aset_3d"]) {
+  for (const name of ["progres", "pustaka", "normal", "rumus", "glosarium", "marker", "kasus", "soal", "pertemuan", "aset_3d"]) {
     try { app.delete(app.findCollectionByNameOrId(name)); } catch (e) {}
   }
 });
@@ -187,7 +178,6 @@ function migSeed() {
   const payload = {
     pertemuan: W.DATA_PERTEMUAN,
     soal: W.DATA_SOAL,
-    esai: W.DATA_ESAI,
     kasus: W.DATA_KASUS,
     marker: W.DATA_MARKER,
     glosarium: L.glosarium,
@@ -251,15 +241,6 @@ migrate((app) => {
     });
   }
 
-  for (const e of SEED.esai) {
-    upsert("esai", "id_lokal", e.id, {
-      pertemuan_terkait: e.pertemuan || [],
-      pertanyaan: e.pertanyaan || "",
-      jawaban_model: e.jawaban_model || "",
-      checklist: e.checklist || [],
-    });
-  }
-
   for (const k of SEED.kasus) {
     upsert("kasus", "id_lokal", k.id, {
       judul: k.judul || "",
@@ -292,7 +273,7 @@ migrate((app) => {
     upsert("pustaka", "kutipan", c, { kutipan: c });
   }
 }, (app) => {
-  for (const name of ["pertemuan", "soal", "esai", "kasus", "marker", "glosarium", "rumus", "normal", "pustaka"]) {
+  for (const name of ["pertemuan", "soal", "kasus", "marker", "glosarium", "rumus", "normal", "pustaka"]) {
     try { for (const r of app.findRecordsByFilter(name, "", "", 0, 0)) app.delete(r); } catch (e) {}
   }
 });
@@ -337,6 +318,21 @@ const files = {
   "1700000010_collections.js": migCollections(),
   "1700000020_seed_content.js": migSeed(),
   "1700000030_seed_aset_3d.js": migAset3d(),
+  "1700000040_remove_esai.js": `// 1700000040_remove_esai.js
+// Remove retired essay data and remedial/essay progress from existing installs.
+migrate((app) => {
+  try { app.delete(app.findCollectionByNameOrId("esai")); } catch (e) {}
+  try {
+    for (const record of app.findRecordsByFilter("progres", "", "", 0, 0)) {
+      const payload = record.get("payload") || {};
+      delete payload.soal_salah;
+      delete payload.esai_jawaban;
+      record.set("payload", payload);
+      app.save(record);
+    }
+  } catch (e) {}
+}, (app) => {});
+`,
 };
 for (const [name, src] of Object.entries(files)) {
   fs.writeFileSync(path.join(MIG_DIR, name), src, "utf8");

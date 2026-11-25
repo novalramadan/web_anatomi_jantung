@@ -49,7 +49,6 @@ Ubah kredensial itu sebelum dipakai bersama mahasiswa sungguhan.
 | `users` | auth bawaan + `nama`, `role` (`mahasiswa` \| `dosen`) |
 | `pertemuan` | 16 pertemuan; field `id_lokal`, `isi` json (tujuan, konsep_inti, dst.) |
 | `soal` | 41 soal PG |
-| `esai` | 6 esai penalaran |
 | `kasus` | 4 kasus bercabang |
 | `marker` | marker barcode → relasi `aset_3d` |
 | `aset_3d` | model GLB |
@@ -58,7 +57,7 @@ Ubah kredensial itu sebelum dipakai bersama mahasiswa sungguhan.
 
 ## Aturan API (ringkas)
 
-- Konten (`pertemuan`, `soal`, `esai`, `kasus`, `marker`, `aset_3d`, `glosarium`, `rumus`, `normal`, `pustaka`):
+- Konten (`pertemuan`, `soal`, `kasus`, `marker`, `aset_3d`, `glosarium`, `rumus`, `normal`, `pustaka`):
   baca = siapa pun yang login; tulis/hapus = `dosen`.
 - `progres`: semua operasi = pemilik rekam (`@request.auth.id = user`).
 - `users`: baca/ubah profil sendiri; `role` tidak bisa diubah lewat API oleh pemilik akun.

@@ -12,8 +12,8 @@
 
   function defaults() {
     return {
-      nama_pemain: "", materi_selesai: [], skor_kuis: {}, soal_salah: [],
-      esai_jawaban: {}, kasus_selesai: {}, marker_dipindai: [], refleksi: {},
+      nama_pemain: "", materi_selesai: [], skor_kuis: {},
+      kasus_selesai: {}, marker_dipindai: [], refleksi: {},
       pengaturan: { ukuranFont: 100, mode: "terang", suara: true }
     };
   }
@@ -45,7 +45,7 @@
     });
   }
 
-  var SORTED_BY_ID_LOKAL = ["pertemuan", "soal", "esai", "kasus", "marker"];
+  var SORTED_BY_ID_LOKAL = ["pertemuan", "soal", "kasus", "marker"];
 
   function records(collection) {
     var sort = SORTED_BY_ID_LOKAL.indexOf(collection) !== -1 ? "&sort=id_lokal" : "";
@@ -67,7 +67,7 @@
 
   function loadData() {
     return Promise.all([
-      records("pertemuan"), records("soal"), records("esai"), records("kasus"),
+      records("pertemuan"), records("soal"), records("kasus"),
       records("marker"), records("glosarium"), records("rumus"), records("normal"), records("pustaka")
     ]).then(function (all) {
       window.DATA_PERTEMUAN = all[0].items.map(function (r) {
@@ -87,15 +87,11 @@
           gambar: img ? img.filename : "", _recordId: img ? img.id : "",
           _fileName: img ? img.filename : "" };
       });
-      window.DATA_ESAI = all[2].items.map(function (r) {
-        return { id: r.id_lokal, pertemuan: r.pertemuan_terkait || [], pertanyaan: r.pertanyaan,
-          jawaban_model: r.jawaban_model, checklist: r.checklist || [] };
-      });
-      window.DATA_KASUS = all[3].items.map(function (r) {
+      window.DATA_KASUS = all[2].items.map(function (r) {
         return { id: r.id_lokal, judul: r.judul, ringkasan: r.ringkasan,
           status_validasi: r.status_validasi, halaman: r.halaman || [] };
       });
-      window.DATA_MARKER = all[4].items.map(function (r) {
+      window.DATA_MARKER = all[3].items.map(function (r) {
         var asset = r.expand && r.expand.aset_3d;
         if (Array.isArray(asset)) asset = asset[0];
         if (asset) {
@@ -107,10 +103,10 @@
           lapisan: r.lapisan || [], model: asset ? asset.id : "", aset_3d: asset || null };
       });
       window.DATA_LAMPIRAN = {
-        glosarium: all[5].items.map(function (r) { return [r.istilah, r.definisi]; }),
-        rumus: all[6].items.map(function (r) { return [r.nama, r.rumus, r.keterangan]; }),
-        normal: all[7].items.map(function (r) { return [r.parameter, r.nilai_normal]; }),
-        pustaka: all[8].items.map(function (r) { return r.kutipan; })
+        glosarium: all[4].items.map(function (r) { return [r.istilah, r.definisi]; }),
+        rumus: all[5].items.map(function (r) { return [r.nama, r.rumus, r.keterangan]; }),
+        normal: all[6].items.map(function (r) { return [r.parameter, r.nilai_normal]; }),
+        pustaka: all[7].items.map(function (r) { return r.kutipan; })
       };
     });
   }
