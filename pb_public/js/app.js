@@ -33,6 +33,17 @@
     app.innerHTML = "";
     current = { path: r.name, params: r.params };
 
+    var publicRoute = r.name === "login" || r.name === "register";
+    var user = (window.Auth && Auth.currentUser()) || null;
+    if (!user && !publicRoute) {
+      location.hash = "#/login";
+      return;
+    }
+    if (user && publicRoute) {
+      location.hash = user.role === "dosen" || user.role === "admin" ? "#/admin" : "#/beranda";
+      return;
+    }
+
     // active nav
     document.querySelectorAll(".mainnav a").forEach(function (a) {
       a.classList.toggle("active", a.dataset.nav === r.name);
@@ -206,9 +217,17 @@
     var nl = document.getElementById("navLogin");
     var lo = document.getElementById("navLogout");
     var na = document.getElementById("navAdmin");
+    var links = document.getElementById("navLinks");
+    var box = document.getElementById("navUser");
+    var name = document.getElementById("navUserName");
+    var role = document.getElementById("navUserRole");
     if (nl) nl.hidden = !!u;
     if (lo) lo.hidden = !u;
     if (na) na.hidden = !(u && (u.role === "admin" || u.role === "dosen"));
+    if (links) links.hidden = !u;
+    if (box) box.hidden = !u;
+    if (name) name.textContent = u ? (u.nama || u.email || "Pengguna") : "";
+    if (role) role.textContent = u ? (u.role === "dosen" ? "Dosen" : u.role === "admin" ? "Admin" : "Mahasiswa") : "";
   }
 
   function setTheme(mode) {
@@ -225,6 +244,7 @@
     if (!window.Storage) { console.error("Storage.js belum dimuat"); return; }
     applySettings();
     window.addEventListener("hashchange", render);
+    window.addEventListener("medicalu:auth", updateNav);
     var lo = document.getElementById("navLogout");
     if (lo) lo.addEventListener("click", function () {
       if (window.Auth) { Auth.logout(); App.toast("Sampai jumpa."); location.hash = "#/beranda"; App.render(); }

@@ -146,7 +146,14 @@
   }
 
   function publicUser(record) {
-    return record ? { id: record.id, email: record.email, role: record.role || "mahasiswa", nama: record.nama || record.email } : null;
+    return record ? {
+      id: record.id,
+      email: record.email,
+      role: record.role || "mahasiswa",
+      nama: record.nama || record.email,
+      created: record.created || "",
+      updated: record.updated || ""
+    } : null;
   }
 
   function setAuth(record, nextToken) {

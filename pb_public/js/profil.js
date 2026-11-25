@@ -21,6 +21,10 @@
 
   function render(app) {
     var p = Storage.load();
+    var u = (window.Auth && Auth.currentUser()) || null;
+    var roleLabel = !u ? "" : u.role === "dosen" ? "Dosen" : u.role === "admin" ? "Admin" : "Mahasiswa";
+    var idLabel = roleLabel ? "Nama " + roleLabel.toLowerCase() + " (opsional)" : "Nama (opsional)";
+    var idPlaceholder = roleLabel === "Dosen" ? "Tulis nama dosen" : roleLabel === "Admin" ? "Tulis nama admin" : "Tulis namamu";
     var done = p.materi_selesai.length;
     var total = window.DATA_PERTEMUAN.length;
     var kuisDiambil = Object.keys(p.skor_kuis).length;
@@ -35,8 +39,20 @@
 
     var html = '<div class="mb-6"><div class="eyebrow mb-2"><span>Profil</span></div><h1 class="mb-3">Profil & Pengaturan</h1><p class="lead">Semua data tersimpan di perangkat ini (localStorage). Tidak ada yang dikirim ke server.</p></div>';
 
+    // data akun yang sedang login
+    if (u) {
+      html += '<div class="surface-card p-5"><h3 class="mb-3">Data Pengguna</h3><dl class="grid grid-cols-1 gap-3 sm:grid-cols-3">' +
+        '<div><dt class="small dim">Nama</dt><dd class="m-0 font-semibold">' + App.escapeHtml(u.nama || u.email || "-") + '</dd></div>' +
+        '<div><dt class="small dim">Email</dt><dd class="m-0 font-semibold break-words">' + App.escapeHtml(u.email || "-") + '</dd></div>' +
+        '<div><dt class="small dim">Peran</dt><dd class="m-0 font-semibold">' + App.escapeHtml(roleLabel) + '</dd></div>' +
+        '<div><dt class="small dim">ID Akun</dt><dd class="m-0 font-semibold mono break-all">' + App.escapeHtml(u.id || "-") + '</dd></div>' +
+        '<div><dt class="small dim">Dibuat</dt><dd class="m-0 font-semibold">' + (u.created ? App.escapeHtml(new Date(u.created).toLocaleString("id-ID")) : "-") + '</dd></div>' +
+        '<div><dt class="small dim">Diperbarui</dt><dd class="m-0 font-semibold">' + (u.updated ? App.escapeHtml(new Date(u.updated).toLocaleString("id-ID")) : "-") + '</dd></div>' +
+        '</dl></div>';
+    }
+
     // nama pemain
-    html += '<div class="surface-card p-5"><h3 class="mb-3">Identitas</h3><label class="field"><span class="lbl">Nama mahasiswa (opsional)</span><input type="text" id="namaPemain" class="input" value="' + App.escapeHtml(p.nama_pemain || "") + '" placeholder="Tulis namamu"></label></div>';
+    html += '<div class="surface-card p-5"><h3 class="mb-3">Identitas</h3><label class="field"><span class="lbl">' + App.escapeHtml(idLabel) + '</span><input type="text" id="namaPemain" class="input" value="' + App.escapeHtml(p.nama_pemain || "") + '" placeholder="' + App.escapeHtml(idPlaceholder) + '"></label></div>';
 
     // statistik
     html += '<div class="surface-card mt-4 p-5"><h3 class="mb-3">Statistik</h3><div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">' +
