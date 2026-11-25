@@ -17,10 +17,11 @@ migrate((app) => {
   }
 
   // users: read/update profile only. role field itself not modifiable via API
-  // (enforced in pb_hooks). create is public (register), enforced as mahasiswa in pb_hooks.
+   // (enforced in pb_hooks). create is public (register); pb_hooks normalizes role
+   // (accepts mahasiswa|dosen, defaults to mahasiswa).
   users.listRule   = "@request.auth.id = id";
   users.viewRule   = "@request.auth.id = id";
-  users.createRule = "";     // open register; pb_hooks forces role = mahasiswa
+   users.createRule = "";     // open register; pb_hooks normalizes role (default mahasiswa)
   users.updateRule = "@request.auth.id = id";
   users.deleteRule = null;   // superuser-only via Dashboard
 

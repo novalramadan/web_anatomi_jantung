@@ -125,7 +125,7 @@ async function superLogin() {
   r = await api("DELETE", "/api/collections/pertemuan/records/" + vid, { token: dos });
   check("dosen delete pertemuan 204", r.status === 204, `got ${r.status}`);
 
-  console.log("\n== Register forces role ==");
+  console.log("\n== Register role handling ==");
   const uniq = Date.now();
   r = await api("POST", "/api/collections/users/records", {
     body: {
@@ -133,7 +133,16 @@ async function superLogin() {
       nama: "Reg", role: "dosen",
     },
   });
-  check("register with role:dosen -> created as mahasiswa",
+  check("register with role:dosen -> kept as dosen",
+        r.status === 200 && r.data.role === "dosen",
+        `got ${r.status} role=${r.data && r.data.role}`);
+  r = await api("POST", "/api/collections/users/records", {
+    body: {
+      email: `reg2${uniq}@test.local`, password: "testpass123", passwordConfirm: "testpass123",
+      nama: "Reg2", role: "admin",
+    },
+  });
+  check("register with invalid role -> defaulted to mahasiswa",
         r.status === 200 && r.data.role === "mahasiswa",
         `got ${r.status} role=${r.data && r.data.role}`);
 

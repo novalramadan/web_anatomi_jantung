@@ -37,7 +37,7 @@
           '<h1>' + (isLogin ? "Selamat datang kembali" : "Mulai perjalanan belajar") + '</h1>' +
           '<p class="lead">' + (isLogin
             ? "Masuk untuk melanjutkan modul Fisiologi Jantung, kuis, dan progres belajar Anda."
-            : "Buat akun mahasiswa untuk menyimpan progres materi, skor kuis, dan kasus klinis.") + '</p>' +
+            : "Buat akun untuk menyimpan progres materi, skor kuis, dan kasus klinis.") + '</p>' +
         '</div>' +
         '<nav class="auth-tabs" aria-label="Pilih mode">' +
           '<a href="#/login" class="' + (isLogin ? "on" : "") + '"' + (isLogin ? ' aria-current="page"' : "") + '>Masuk</a>' +
@@ -48,13 +48,13 @@
       html += '<div class="auth-grid-2">' +
         field("aNama", "Nama lengkap", "text", ICON.user, "name", 'required placeholder="Nama Anda"') +
         '<label class="field auth-field" for="aRole"><span class="lbl">Peran</span><span class="auth-input">' + ICON.badge +
-          '<select id="aRole" class="input" disabled><option value="mahasiswa">Mahasiswa</option></select></span></label>' +
+          '<select id="aRole" class="input"><option value="mahasiswa">Mahasiswa</option><option value="dosen">Dosen</option></select></span></label>' +
       '</div>';
     }
     html += field("aEmail", "Email", "email", ICON.mail, "email", 'required placeholder="nama@kampus.ac.id"');
-    html += field("aPw", "Password", "password", ICON.lock, isLogin ? "current-password" : "new-password", 'required minlength="6" placeholder="Minimal 6 karakter"');
+    html += field("aPw", "Password", "password", ICON.lock, isLogin ? "current-password" : "new-password", 'required minlength="8" placeholder="Minimal 8 karakter"');
     if (!isLogin) {
-      html += '<div class="auth-row"><span class="tiny dim">Peran dosen diberikan melalui Dashboard PocketBase.</span></div>';
+      html += '<div class="auth-row"><span class="tiny dim">Pilih peran sesuai status Anda: mahasiswa atau dosen.</span></div>';
     } else {
       html += '<div class="auth-row"><span class="tiny dim">Lupa password? Hubungi dosen pengampu.</span></div>';
     }
@@ -232,7 +232,7 @@
       var pw = document.getElementById("aPw").value;
       var nama = document.getElementById("aNama").value.trim();
       var role = document.getElementById("aRole").value;
-      if (!nama || !email || pw.length < 6) { showMsg("Lengkapi nama, email, dan password (min. 6 karakter).", false); return; }
+      if (!nama || !email || pw.length < 8) { showMsg("Lengkapi nama, email, dan password (min. 8 karakter).", false); return; }
       showMsg("Mendaftarkan…", true);
       busy(form, true);
       Auth.register(email, pw, nama, role).then(afterAuth).catch(function (err) { busy(form, false); showMsg(err.message, false); });

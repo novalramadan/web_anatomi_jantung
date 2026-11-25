@@ -168,12 +168,13 @@
     });
   }
 
-  function register(email, password, nama) {
+  function register(email, password, nama, role) {
     email = String(email || "").trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return Promise.reject(new Error("Format email tidak valid."));
     if (!password || String(password).length < 8) return Promise.reject(new Error("Password minimal 8 karakter."));
+    var safeRole = role === "dosen" ? "dosen" : "mahasiswa";
     return request("/api/collections/users/records", {
-      method: "POST", body: JSON.stringify({ email: email, password: password, passwordConfirm: password, nama: nama || email.split("@")[0], role: "mahasiswa" })
+      method: "POST", body: JSON.stringify({ email: email, password: password, passwordConfirm: password, nama: nama || email.split("@")[0], role: safeRole })
     }).then(function () { return login(email, password); });
   }
 

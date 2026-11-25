@@ -9,7 +9,7 @@
 //
 // Responsibilities:
 //   1. Seed the superuser + two demo accounts on first run.
-//   2. Force role = "mahasiswa" on public registration regardless of request body.
+//   2. Normalize role on user create: accept mahasiswa/dosen, else default mahasiswa.
 //   3. Prevent non-dosen edits of their own `role` field via the API.
 //   4. Block deletion of an aset_3d still referenced by a marker (HTTP 400).
 
@@ -41,18 +41,21 @@ onBootstrap((e) => {
 });
 
 // ---------------------------------------------------------------------------
-// Force role = "mahasiswa" on any public user create. Superuser-created records
-// (via Dashboard) keep whatever role was set in the request body.
+// Normalize role on user create: accept a valid role from the request body
+// (mahasiswa | dosen), otherwise default to mahasiswa.
 // ---------------------------------------------------------------------------
 onRecordCreateRequest((e) => {
   // CONFIG — keep in sync with the other hooks.
   const defaultRole = "mahasiswa";
+  const validRoles = ["mahasiswa", "dosen"];
   // -------------------------------------------------------------------------
 
   if (e.record.collection().name !== "users") return e.next();
-  if (!e.hasSuperuserAuth()) {
-    e.record.set("role", defaultRole);
-  }
+  const requestedRole = String(e.record.get("role") || "").trim().toLowerCase();
+  e.record.set(
+    "role",
+    validRoles.indexOf(requestedRole) !== -1 ? requestedRole : defaultRole
+  );
   return e.next();
 }, "users");
 
