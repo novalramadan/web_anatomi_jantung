@@ -22,8 +22,14 @@
     options = options || {};
     var headers = options.headers || {};
     if (token) headers.Authorization = token;
-    if (!(options.body instanceof FormData)) headers["Content-Type"] = "application/json";
-    return fetch(BASE + path, Object.assign({}, options, { headers: headers })).then(function (res) {
+    var body = options.body;
+    if (body instanceof FormData) {
+      // fetch sets the multipart boundary itself; no Content-Type here.
+    } else {
+      if (typeof body === "object" && body !== null) body = JSON.stringify(body);
+      headers["Content-Type"] = "application/json";
+    }
+    return fetch(BASE + path, Object.assign({}, options, { headers: headers, body: body })).then(function (res) {
       return res.text().then(function (text) {
         var data = null;
         try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
@@ -179,7 +185,7 @@
     if (!token) return Promise.resolve(null);
     return request("/api/collections/users/auth-refresh", { method: "POST", body: "{}" }).then(function (res) {
       setAuth(res.record, res.token);
-      return fetchProgress().then(function () { return user; });
+      return fetchProgress().then(loadData).then(function () { return user; });
     }).catch(function () { logout(); return null; });
   }
 
@@ -190,7 +196,7 @@
     });
   }
 
-  var ready = restoreAuth().then(loadData).catch(function (err) {
+  var ready = restoreAuth().catch(function (err) {
     console.error("Medical-U startup failed:", err.message);
     throw err;
   });
@@ -198,7 +204,10 @@
   window.PB = {
     request: request, ready: ready, loadData: loadData, fileUrl: fileUrl,
     getToken: function () { return token; }, currentUser: function () { return user; },
-    records: records, flushProgress: flushProgress
+    records: records, flushProgress: flushProgress,
+    // Refresh the DATA_* globals after a dosen edit. The glossary index caches term
+    // keys, so drop it too or new terms never get tooltips.
+    reload: function () { window._glossIdx = null; return loadData(); }
   };
 
   window.Auth = {

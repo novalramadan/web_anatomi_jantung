@@ -45,7 +45,7 @@
     html += '<div class="grid gap-4">';
     html += '<div class="surface-card p-5"><div class="mb-3"><h3 class="m-0">Kuis Campuran</h3></div>' +
       '<label class="field"><span class="lbl">Pertemuan</span><select id="mixP" class="input"><option value="0">Semua</option>' + window.DATA_PERTEMUAN.filter(function (m) { return !m.label_integrasi; }).map(function (m) { return '<option value="' + m.id + '">P' + m.id + ' · ' + App.escapeHtml(m.judul) + '</option>'; }).join('') + '</select></label>' +
-      '<label class="field"><span class="lbl">Jumlah soal</span><select id="mixN" class="input"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></label>' +
+      '<label class="field"><span class="lbl">Jumlah soal</span><select id="mixN" class="input"><option selected>10</option></select></label>' +
       '<label class="field"><span class="lbl">Level</span><select id="mixL" class="input"><option value="">Semua</option><option value="C2">C2</option><option value="C3">C3</option><option value="C4">C4</option></select></label>' +
       '<button class="btn btn-primary btn-block" id="mixStart" type="button">Mulai Kuis Campuran</button></div>';
     var salah = p.soal_salah || [];

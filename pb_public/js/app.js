@@ -22,7 +22,12 @@
     else render();
   }
 
+  var leaveFns = [];
+  function onLeave(fn) { leaveFns.push(fn); }
+
   function render() {
+    leaveFns.splice(0).forEach(function (fn) { try { fn(); } catch (e) { console.error(e); } });
+    document.body.classList.remove("auth-page");
     var r = resolve(location.hash);
     var app = document.getElementById("app");
     app.innerHTML = "";
@@ -249,6 +254,7 @@
     define: define,
     add: add,
     on: on,
+    onLeave: onLeave,
     navigate: navigate,
     render: render,
     toast: toast,

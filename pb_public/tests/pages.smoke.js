@@ -77,7 +77,11 @@ const idContracts = [
   ["js/admin.js", "newItem"],
   ["js/admin.js", "cancelForm"],
   ["js/admin.js", "entForm"],
-  ["js/admin.js", "formArea"],
+  ["js/admin.js", "formSave"],
+  ["js/admin.js", "formCancel"],
+  ["js/admin.js", "recordsPanel"],
+  ["js/admin.js", "recordForm"],
+  ["js/admin.js", "collectionTabs"],
 ];
 
 function idsInMarkup(file) {
@@ -87,6 +91,9 @@ function idsInMarkup(file) {
   const re = /id="([^"]+)"/g;
   let m;
   while ((m = re.exec(src))) set.add(m[1]);
+  // id yang dibangun lewat helper, mis. field("aEmail", ...)
+  const helper = /field\("([^"]+)"/g;
+  while ((m = helper.exec(src))) set.add(m[1]);
   return set;
 }
 
@@ -101,13 +108,9 @@ for (const [jsFile, id] of idContracts) {
 const attrContracts = [
   ["js/kuis.js", "data-opt"],
   ["js/vn.js", "data-goto"],
-  ["js/admin.js", "data-ent"],
   ["js/admin.js", "data-edit"],
   ["js/admin.js", "data-del"],
-  ["js/admin.js", "data-role"],
-  ["js/admin.js", "data-editpw"],
-  ["js/admin.js", "data-deluser"],
-  ["js/admin.js", "data-f"],
+  ["js/admin.js", "data-field"],
   ["js/kuis.js", "data-ck"],
 ];
 for (const [jsFile, attr] of attrContracts) {
@@ -123,7 +126,7 @@ for (const [jsFile, attr] of attrContracts) {
 const legacyClasses = [
   "hero", "hero-actions", "hero-meta", "pulse-trace", "mod-grid", "mod-card", "section-head",
   "reader", "article", "pager", "toc-group-title", "badge-teal", "badge-accent",
-  "stat-row", "card-head", "auth-wrap", "auth-card", "admin-tabs", "row-actions", "ar-tabs",
+  "stat-row", "admin-tabs", "row-actions", "ar-tabs",
   "ar-controls", "chip-row",
 ];
 const allJs = fs.readdirSync(path.join(root, "js")).filter(f => f.endsWith(".js"));
@@ -150,7 +153,7 @@ ok(idx.includes("Plus+Jakarta+Sans"), "index.html memuat Plus Jakarta Sans");
 ok(idx.includes("JetBrains+Mono"), "index.html memuat JetBrains Mono");
 ok(idx.includes("--brand:        #0F4D3A"), "palet brand hijau terpasang");
 // urutan script penting (config sebelum modul, app sebelum halaman)
-const order = ["js/config.js", "js/storage.js", "js/app.js", "js/home.js", "js/materi.js", "js/kuis.js", "js/vn.js", "js/ar.js", "js/profil.js", "js/auth.js", "js/login.js", "js/admin.js"];
+const order = ["js/config.js", "js/pb.js", "js/app.js", "js/home.js", "js/materi.js", "js/kuis.js", "js/vn.js", "js/ar.js", "js/profil.js", "js/login.js", "js/admin.js"];
 let lastIdx = -1, orderOk = true;
 for (const s of order) {
   const i = idx.indexOf(s);
