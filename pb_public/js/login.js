@@ -26,6 +26,12 @@
     var html = '<section class="auth-split">' +
       // ===== kiri: form =====
       '<div class="auth-left"><div class="auth-left-in">' +
+        '<div class="auth-brand">' +
+          '<span class="auth-brand-mark" aria-hidden="true">' +
+            '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 8.5c0-2.5-2-4.5-4.5-4.5-1.6 0-3 .9-3.8 2.2C11.5 4.9 10.1 4 8.5 4 6 4 4 6 4 8.5c0 5 8 9.5 8 9.5s8-4.5 8-9.5z"/><path d="M3.5 12h4l1.5-3 2 5 1.5-2.5h4"/></svg>' +
+          '</span>' +
+          '<span class="auth-brand-name">' + App.escapeHtml(window.CONFIG.namaWeb || "Medical-U") + '</span>' +
+        '</div>' +
         '<div class="auth-head">' +
           '<span class="eyebrow">' + (isLogin ? "Portal Pembelajaran" : "Akun Baru") + '</span>' +
           '<h1>' + (isLogin ? "Selamat datang kembali" : "Mulai perjalanan belajar") + '</h1>' +

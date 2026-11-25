@@ -607,11 +607,15 @@
     /* ===== Login split 50:50 (fixed no-scroll & responsif) ===== */
     body.auth-page { height: 100dvh; overflow: hidden; }
     body.auth-page > footer { display: none; }
+    body.auth-page > .topbar { display: none; }
     body.auth-page #app { max-width: none; padding: 0; display: flex; flex: 1; min-height: 0; overflow: hidden; }
     .auth-split { flex: 1; width: 100%; height: 100%; display: grid; grid-template-columns: 1fr 1fr; min-height: 0; overflow: hidden; }
     .auth-left { position: relative; display: flex; align-items: center; justify-content: center; padding: clamp(1rem, 2.5vh, 2.5rem) clamp(1.25rem, 4vw, 3.5rem); background: var(--surface); overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; }
     .auth-left::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(60% 50% at 0% 0%, color-mix(in srgb, var(--brand) 9%, transparent), transparent 70%), radial-gradient(50% 40% at 100% 100%, color-mix(in srgb, var(--danger) 6%, transparent), transparent 70%); }
     .auth-left-in { position: relative; width: 100%; max-width: 430px; animation: authIn .5s cubic-bezier(.2,.8,.2,1) both; }
+    .auth-brand { display: flex; align-items: center; gap: .65rem; margin-bottom: clamp(1rem, 2.6vh, 1.6rem); text-decoration: none; }
+    .auth-brand-mark { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 14px; background: var(--brand-soft); color: var(--brand); flex: none; }
+    .auth-brand-name { font-size: 1.3rem; font-weight: 800; letter-spacing: -.02em; color: var(--ink); line-height: 1; }
     @keyframes authIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
     .auth-head h1 { margin: .35rem 0 .3rem; font-size: clamp(1.45rem, 1rem + 1.35vw, 2.1rem); font-weight: 800; letter-spacing: -.03em; line-height: 1.15; }
     .auth-head .lead { margin: 0 0 clamp(.75rem, 1.8vh, 1.15rem); font-size: clamp(.86rem, .8rem + .25vw, .95rem); line-height: 1.45; }
@@ -702,6 +706,8 @@
       .auth-left { align-items: flex-start; padding: .85rem 1.1rem 1rem; }
       .auth-left-in { margin: auto 0; max-width: 440px; }
       .auth-head .lead, .auth-card, .heart-label, .drag-hint { display: none; }
+      .auth-brand { margin-bottom: .85rem; }
+      .auth-brand-name { font-size: 1.15rem; }
       .auth-mob-bpm { display: inline-flex; }
       .auth-top { top: .65rem; left: .75rem; right: .75rem; }
       .auth-head h1 { font-size: 1.3rem; margin: .25rem 0 .55rem; }
