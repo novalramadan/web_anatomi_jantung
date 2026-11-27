@@ -50,8 +50,8 @@ Ubah kredensial itu sebelum dipakai bersama mahasiswa sungguhan.
 | `pertemuan` | 16 pertemuan; field `id_lokal`, `isi` json (tujuan, konsep_inti, dst.) |
 | `soal` | 41 soal PG |
 | `kasus` | 4 kasus bercabang |
-| `marker` | marker barcode → relasi `aset_3d` |
-| `aset_3d` | model GLB |
+| `marker` | dibuat/diperbarui **otomatis** dari `aset_3d`: `nama`/`deskripsi` mengikuti aset, nilai `barcode` dibuat otomatis, relasi `aset_3d` terisi. Tidak dikelola manual dari panel dosen. |
+| `aset_3d` | model GLB; menyimpan/menghapus aset ikut membuat/menghapus `marker` terkait |
 | `glosarium` / `rumus` / `normal` / `pustaka` | lampiran |
 | `progres` | 1 record per user, `payload` = mirror localStorage frontend |
 
@@ -59,6 +59,9 @@ Ubah kredensial itu sebelum dipakai bersama mahasiswa sungguhan.
 
 - Konten (`pertemuan`, `soal`, `kasus`, `marker`, `aset_3d`, `glosarium`, `rumus`, `normal`, `pustaka`):
   baca = siapa pun yang login; tulis/hapus = `dosen`.
+  Khusus `marker`: dibuat/diperbarui otomatis oleh hook saat `aset_3d` (file `.glb`) disimpan,
+  dan ikut terhapus saat asetnya dihapus. Panel dosen **tidak** menyediakan CRUD marker manual;
+  pengelolaan QR dilakukan dari menu **AR → Cetak Marker** (cetak QR dari data marker yang ada).
 - `progres`: semua operasi = pemilik rekam (`@request.auth.id = user`).
 - `users`: baca/ubah profil sendiri; `role` tidak bisa diubah lewat API oleh pemilik akun.
 - Register publik **selalu** menghasilkan `role = "mahasiswa"` apa pun isi body (dipaksa di hook).

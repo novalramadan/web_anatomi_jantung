@@ -582,8 +582,8 @@
     .ar-info.show { transform: translateY(0); }
     .ar-info h3 { margin: 0 0 6px; color: #9ADFD6; }
 
-    .ar-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
-    .ar-tabs .btn[aria-pressed="true"] { border-color: var(--brand); color: var(--brand-ink); background: var(--brand-soft); }
+    .ar-mode-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+    @media print { .ar-mode-tabs { display: none !important; } }
 
     .viewer3d { position: relative; border: 1px solid var(--line); border-radius: 1rem; background: radial-gradient(120% 100% at 50% 0%, #101a2c 0%, #060a12 100%); overflow: hidden; }
     .viewer3d canvas { display: block; width: 100%; height: 100%; touch-action: none; }
@@ -1187,6 +1187,28 @@
 
     /* Aksen EKG subtle (pengganti pulse-trace besar) */
     .ekg-mini { color: var(--brand); opacity: .9; }
+
+    /* ===== Editor JSON terstruktur (panel dosen) ===== */
+    .je-section { margin-bottom: 1.15rem; }
+    .je-card { margin-bottom: .65rem; }
+    .je-card > summary { gap: .5rem; }
+    .je-card .je-body { padding: .85rem 1rem 1rem; }
+    .je-sum-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .je-sumbtns, .je-rowbtns { display: inline-flex; align-items: center; gap: .25rem; flex: none; }
+    .je-sumbtns .btn, .je-rowbtns .btn { padding: .15rem .5rem; min-height: 26px; font-size: .75rem; border-radius: .5rem; }
+    .je-row { display: flex; align-items: flex-start; gap: .5rem; margin-bottom: .5rem; }
+    .je-row > .input, .je-row > textarea.input { flex: 1; min-width: 0; }
+    .je-subhead { display: flex; justify-content: space-between; align-items: center; gap: .5rem; margin: .75rem 0 .45rem; }
+    .je-nested { border: 1px dashed var(--line-strong); border-radius: .75rem; padding: .7rem .75rem; margin-bottom: .6rem; background: var(--surface-2); }
+    .je-grid-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .6rem; margin-bottom: .6rem; }
+    .je-opsi-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .je-grid-scroll { overflow-x: auto; }
+    .je-grid-table { border-collapse: collapse; width: 100%; }
+    .je-grid-table th, .je-grid-table td { padding: .18rem; vertical-align: top; }
+    .je-grid-table .input { min-width: 8.5rem; }
+    .je-cell { padding: .4rem .5rem; font-size: .85rem; min-height: auto; }
+    .je-cellwrap { display: flex; align-items: center; gap: .2rem; }
+    .je-w-sm { flex: 0 0 130px; }
 
     @media (prefers-reduced-motion: reduce) {
       * { animation-duration: .001ms !important; transition-duration: .001ms !important; }

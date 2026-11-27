@@ -42,9 +42,9 @@ const idContracts = [
   // ar
   ["js/ar.js", "tabCam"],
   ["js/ar.js", "tab3d"],
+  ["js/ar.js", "tabCetak"],
   ["js/ar.js", "arStatus"],
   ["js/ar.js", "camSwitch"],
-  ["js/ar.js", "arFallback"],
   ["js/ar.js", "arInfo"],
   ["js/ar.js", "arInfoBody"],
   ["js/ar.js", "glbCanvas"],

@@ -9,19 +9,26 @@
   var camFacing = "environment";
   var ctrl = null;
   var gen3d = 0;
+  var camGen = 0;
   var loadedKey = null;
 
   // ============================================================
   // Halaman AR utama
   // ============================================================
-  function renderAR(app) {
+  function renderAR(app, mode) {
+    mode = mode === "3d" ? "3d" : "cam";
+    var lead = mode === "3d"
+      ? "Jelajahi model 3D jantung tanpa kamera: seret latar untuk memutar, gulir untuk zoom."
+      : "Arahkan kamera ke QR code marker (lihat halaman Cetak Marker). Model 3D jantung akan muncul di atas layar. Butuh izin kamera dan HTTPS/localhost.";
     var html = '<div class="mb-6"><div class="eyebrow mb-2"><span>AR Scanner</span></div><h1 class="mb-3">Scan QR Marker Jantung</h1>' +
-      '<p class="lead">Arahkan kamera ke QR code marker (lihat halaman Cetak Marker). Model 3D jantung akan muncul di atas layar. Butuh izin kamera dan HTTPS/localhost.</p></div>';
-    html += '<div class="mb-4 flex flex-wrap gap-2">' +
-      '<button class="btn btn-sm btn-primary" id="tabCam" type="button" aria-pressed="true">Kamera</button>' +
-      '<button class="btn btn-sm" id="tab3d" type="button" aria-pressed="false">Mode 3D Tanpa Kamera</button>' +
-      '<a class="btn btn-sm btn-ghost" href="#/ar/cetak">Cetak Marker</a>' +
-      '</div>';
+      '<p class="lead">' + lead + '</p></div>';
+    html += arTabs(mode);
+    if (mode === "3d") {
+      html += '<div id="arView" class="ar-shell" role="region" aria-label="Model 3D"></div>';
+      app.innerHTML = html;
+      render3DView();
+      return;
+    }
     html += '<div id="arView" class="ar-shell" role="region" aria-label="Pemindai AR">' +
       '<div id="arVideo" class="ar-video-wrap">' +
       '<video id="camVideo" playsinline muted autoplay></video>' +
@@ -36,27 +43,29 @@
       '</div>' +
       '<div id="gzPanel" class="absolute right-3 z-10" style="top:3.2rem"></div>' +
       '</div>' +
-      '<div id="arFallback" class="ar-fallback hidden">Kamera tidak tersedia. Gunakan Mode 3D Tanpa Kamera.</div>' +
       '<div id="arInfo" class="ar-info"><div id="arInfoBody"></div></div>' +
       '</div>';
     app.innerHTML = html;
-    document.getElementById("tabCam").addEventListener("click", function () { switchTab(app, "cam"); });
-    document.getElementById("tab3d").addEventListener("click", function () { switchTab(app, "3d"); });
-    // init Three.js overlay SEKARANG agar canvas sudah berukuran saat QR ditemukan
-    setTimeout(function () { ensure3D(); startCamera(); }, 60);
+    // init Three.js overlay SEKARANG agar canvas sudah berukuran saat QR ditemukan.
+    // Guard: batal bila pengguna sudah pindah rute sebelum timer ini menyala.
+    setTimeout(function () {
+      if (location.hash !== "#/ar") return;
+      if (!document.getElementById("glbCanvas") || !document.getElementById("camVideo")) return;
+      ensure3D();
+      startCamera();
+    }, 60);
   }
 
-  function switchTab(app, mode) {
-    stopCamera();
-    dispose3D();
-    if (mode === "cam") {
-      // bangun ulang seluruh halaman AR (canvas + panel gizmo + bar) lalu nyalakan kamera
-      renderAR(app);
-    } else {
-      document.getElementById("tabCam").setAttribute("aria-pressed", "false");
-      document.getElementById("tab3d").setAttribute("aria-pressed", "true");
-      render3DView();
-    }
+  // Tab bar bersama: satu sumber markup untuk kamera, 3D, dan cetak.
+  // Tab aktif = btn-primary + aria-current="page"; nonaktif tetap .btn agar seragam.
+  function arTabs(active) {
+    var cls = function (key) { return "btn btn-sm" + (active === key ? " btn-primary" : ""); };
+    var cur = function (key) { return active === key ? ' aria-current="page"' : ""; };
+    return '<nav class="ar-mode-tabs" aria-label="Mode AR Scanner">' +
+      '<a class="' + cls("cam") + '" id="tabCam" href="#/ar"' + cur("cam") + '>Kamera</a>' +
+      '<a class="' + cls("3d") + '" id="tab3d" href="#/ar/3d"' + cur("3d") + '>Mode 3D Tanpa Kamera</a>' +
+      '<a class="' + cls("cetak") + '" id="tabCetak" href="#/ar/cetak"' + cur("cetak") + '>Cetak Marker</a>' +
+      '</nav>';
   }
 
   // ============================================================
@@ -65,15 +74,11 @@
   function startCamera() {
     var status = document.getElementById("arStatus");
     var wrap = document.getElementById("arVideo");
-    var fallback = document.getElementById("arFallback");
+    var gen = camGen;
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      if (fallback) fallback.classList.remove("hidden");
-      if (wrap) wrap.style.display = "none";
-      if (status) { status.textContent = "Kamera tidak didukung browser ini."; status.className = "ar-status err"; }
-      render3DView();
+      leaveCameraTo3D("Kamera tidak didukung browser ini — beralih ke mode 3D.");
       return;
     }
-    if (fallback) fallback.classList.add("hidden");
     if (wrap) wrap.style.display = "block";
     var sw = document.getElementById("camSwitch");
     if (sw) sw.onclick = function () {
@@ -86,6 +91,7 @@
 
     navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: camFacing }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false })
       .then(function (s) {
+        if (gen !== camGen) { s.getTracks().forEach(function (t) { t.stop(); }); return; }
         stream = s;
         video = document.getElementById("camVideo");
         video.srcObject = s;
@@ -95,15 +101,20 @@
         startQRScan();
       })
       .catch(function (err) {
-        if (wrap) wrap.style.display = "none";
-        if (fallback) fallback.classList.remove("hidden");
+        if (gen !== camGen) return; // sudah pindah halaman/mode: jangan ubah tampilan
         var msg = "Izin kamera ditolak/tidak tersedia. ";
         if (location.protocol === "file:") msg += "Buka lewat HTTPS/localhost.";
         else if (!window.isSecureContext) msg += "Butuh HTTPS.";
         else msg += "(" + err.name + ")";
-        if (status) { status.textContent = msg; status.className = "ar-status err"; }
-        render3DView();
+        leaveCameraTo3D(msg + " Beralih ke mode 3D.");
       });
+  }
+
+  // Kamera gagal/tak didukung: tampilkan mode 3D lewat rute agar tab aktif konsisten.
+  function leaveCameraTo3D(msg) {
+    if (msg) App.toast(msg, 3600);
+    stopCamera();
+    App.navigate("#/ar/3d");
   }
 
   function startQRScan() {
@@ -294,6 +305,7 @@
   }
 
   function stopCamera() {
+    camGen++; // pembatalan: callback getUserMedia lama jadi basi
     clearInterval(scanTimer);
     if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
     if (video) { video.srcObject = null; }
@@ -306,10 +318,16 @@
     var body = document.getElementById("arInfoBody");
     var infoEl = document.getElementById("arInfo");
     if (!marker) { infoEl.classList.remove("show"); return; }
+    // Marker yang dibuat otomatis bisa belum punya pertemuan terkait
+    // (`pertemuan_terkait: []`); jangan tampilkan tautan "#/materi/undefined".
+    var terkait = Array.isArray(marker.pertemuan_terkait) ? marker.pertemuan_terkait : [];
+    var pid = terkait.length ? terkait[0] : null;
+    var links = pid != null
+      ? '<div class="mt-3 flex flex-wrap gap-2"><a class="btn btn-sm" href="#/materi/' + encodeURIComponent(pid) + '">Buka Materi</a>' +
+        '<a class="btn btn-sm" href="#/kuis/p/' + encodeURIComponent(pid) + '">Kuis</a></div>'
+      : "";
     var html = '<h3 class="m-0 mb-1 text-brand">' + App.escapeHtml(marker.nama) + '</h3>' +
-      '<p class="small muted m-0">' + App.escapeHtml(marker.deskripsi) + '</p>' +
-      '<div class="mt-3 flex flex-wrap gap-2"><a class="btn btn-sm" href="#/materi/' + marker.pertemuan_terkait[0] + '">Buka Materi</a>' +
-      '<a class="btn btn-sm" href="#/kuis/p/' + marker.pertemuan_terkait[0] + '">Kuis</a></div>';
+      '<p class="small muted m-0">' + App.escapeHtml(marker.deskripsi) + '</p>' + links;
     body.innerHTML = html;
     infoEl.classList.add("show");
   }
@@ -388,8 +406,9 @@
   // ============================================================
   function renderCetak(app) {
     var html = '<div class="mb-6"><div class="eyebrow mb-2">Cetak Marker</div><h1 class="mb-3">Cetak QR Marker</h1>' +
-      '<p class="lead">QR code ini berisi nilai barcode yang dikenali scanner. Cetak minimal 4×4 cm.</p>' +
-      '<div class="mt-3 flex flex-wrap gap-3"><button class="btn btn-primary" id="printBtn" type="button">Cetak / Simpan</button><a class="btn" href="#/ar">Kembali ke Scanner</a></div></div>';
+      '<p class="lead">QR code ini berisi nilai barcode yang dikenali scanner. Cetak minimal 4×4 cm.</p></div>';
+    html += arTabs("cetak");
+    html += '<div class="mb-4"><button class="btn btn-primary" id="printBtn" type="button">Cetak / Simpan</button></div>';
     html += '<div class="marker-print" id="markerPrint">';
     window.DATA_MARKER.forEach(function (m) {
       html += '<div class="marker-cell" role="img" aria-label="QR marker ' + App.escapeHtml(m.nama) + '">' +
@@ -432,9 +451,11 @@
   // Router
   // ============================================================
   App.add("ar", function (app, params) {
-    if (params && params[0] === "cetak") { stopCamera(); renderCetak(app); return; }
+    var sub = params && params[0];
     stopCamera();
-    renderAR(app);
+    dispose3D();
+    if (sub === "cetak") { renderCetak(app); return; }
+    renderAR(app, sub === "3d" ? "3d" : "cam");
   });
   window.addEventListener("hashchange", stopCamera);
 })();
