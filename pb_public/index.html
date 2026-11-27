@@ -242,14 +242,43 @@
       .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
       .modal-back {
-        position: fixed; inset: 0; background: rgba(8,16,26,.55);
-        backdrop-filter: blur(4px);
+        position: fixed; inset: 0; background: rgba(8,16,26,.5);
+        -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
         display: none; align-items: center; justify-content: center;
         padding: 1rem; z-index: 300;
       }
-      .modal-back.show { display: flex; }
-      .modal { background: var(--surface); border: 1px solid var(--line); border-radius: 1rem; box-shadow: var(--shadow-pop); padding: 1.4rem; width: min(560px, 100%); max-height: 86vh; overflow-y: auto; }
-      .modal h2, .modal h3 { margin-top: 0; }
+      .modal-back.show { display: flex; animation: backdropIn .18s ease both; }
+      .modal {
+        display: flex; flex-direction: column; width: min(560px, 100%); max-height: 86vh;
+        background: var(--surface); border: 1px solid var(--line); border-radius: 1.15rem;
+        box-shadow: var(--shadow-pop); overflow: hidden;
+        animation: dialogIn .2s cubic-bezier(.2,.8,.2,1) both;
+      }
+      .modal.modal-sm { width: min(420px, 100%); }
+      .modal.modal-lg { width: min(820px, 100%); }
+      .modal-head { display: flex; align-items: flex-start; gap: .85rem; padding: 1.15rem 1.25rem .7rem; }
+      .modal-icon { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: .85rem; background: var(--brand-soft); color: var(--brand); }
+      .modal-icon.danger { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
+      .modal-icon.warning { background: var(--warning-soft); color: var(--warning); }
+      .modal-icon.success { background: color-mix(in srgb, var(--success) 14%, transparent); color: var(--success); }
+      .modal-icon.question { background: var(--brand-soft); color: var(--brand); }
+      .modal-headtext { flex: 1; min-width: 0; }
+      .modal-title { margin: 0; color: var(--ink); font-size: 1.1rem; font-weight: 800; letter-spacing: -.01em; line-height: 1.3; }
+      .modal-subtitle { margin: .2rem 0 0; color: var(--ink-3); font-size: .82rem; }
+      .modal-close { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: .55rem; background: transparent; color: var(--ink-3); font-size: 1.35rem; line-height: 1; cursor: pointer; }
+      .modal-close:hover { background: var(--surface-3); color: var(--ink); }
+      .modal-body { padding: .25rem 1.25rem 1.2rem; overflow-y: auto; }
+      .modal-msg { margin: .15rem 0 .25rem; color: var(--ink-2); font-size: .94rem; line-height: 1.6; }
+      .modal-foot { display: flex; justify-content: flex-end; gap: .6rem; padding: 1rem 1.25rem; border-top: 1px solid var(--line); background: var(--surface); flex-wrap: wrap; }
+      .modal-foot .btn { min-height: 40px; }
+      .modal-body .field { margin-top: .9rem; }
+      html.dialog-open, html.dialog-open body { overflow: hidden; }
+      @keyframes backdropIn { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes dialogIn { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: none; } }
+      @media (max-width: 640px) {
+        .modal { width: 100%; max-height: 92vh; border-radius: 1rem; }
+        .modal-foot .btn { flex: 1; justify-content: center; }
+      }
 
       .hidden { display: none !important; }
       .muted { color: var(--ink-2); }
@@ -290,10 +319,11 @@
         </div>
         <div class="nav-links" id="navLinks">
           <a href="#/materi" data-nav="materi" class="navlink"><svg class="nav-ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h7a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h7z"/></svg><span class="nav-label">Materi</span><svg class="nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
-          <a href="#/kuis"   data-nav="kuis"   class="navlink"><svg class="nav-ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 12l2 2 4-4"/><rect x="3" y="3" width="18" height="18" rx="3"/></svg><span class="nav-label">Kuis</span><svg class="nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
+          <a href="#/kuis"   data-nav="kuis"   class="navlink" id="navKuis"><svg class="nav-ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 12l2 2 4-4"/><rect x="3" y="3" width="18" height="18" rx="3"/></svg><span class="nav-label">Kuis</span><svg class="nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
           <a href="#/vn"     data-nav="vn"     class="navlink"><svg class="nav-ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg><span class="nav-label">Visual Novel</span><svg class="nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
           <a href="#/ar"     data-nav="ar"     class="navlink"><svg class="nav-ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8V5a2 2 0 0 1 2-2h3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/><rect x="8" y="8" width="8" height="8" rx="1"/></svg><span class="nav-label">AR Scanner</span><svg class="nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
           <a href="#/profil" data-nav="profil" class="navlink"><svg class="nav-ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><span class="nav-label">Profil</span><svg class="nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
+          <a href="#/statistik" data-nav="statistik" class="navlink" id="navStatistik" hidden><svg class="nav-ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="nav-label">Statistik</span><svg class="nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
           <a href="#/admin"  data-nav="admin"  class="navlink" id="navAdmin" hidden><svg class="nav-ico" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span class="nav-label">Admin</span><svg class="nav-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></a>
         </div>
         <div class="nav-actions">
@@ -319,23 +349,24 @@
     </div>
   </footer>
 
-  <script src="js/config.js"></script>
-  <script src="js/pb.js"></script>
-  <script src="js/app.js"></script>
-  <script src="js/home.js"></script>
-  <script src="js/materi.js"></script>
-  <script src="js/kuis.js"></script>
-  <script src="js/vn.js"></script>
-  <script src="js/ar.js"></script>
-  <script src="js/profil.js"></script>
+  <script src="js/config.js?v=20261128a"></script>
+  <script src="js/pb.js?v=20261128a"></script>
+  <script src="js/app.js?v=20261128a"></script>
+  <script src="js/home.js?v=20261128a"></script>
+  <script src="js/materi.js?v=20261128a"></script>
+  <script src="js/kuis.js?v=20261128a"></script>
+  <script src="js/vn.js?v=20261128a"></script>
+  <script src="js/ar.js?v=20261128a"></script>
+  <script src="js/profil.js?v=20261128a"></script>
+  <script src="js/statistik.js?v=20261128a"></script>
   <script src="assets/lib/three.min.js"></script>
   <script src="assets/lib/GLTFLoader.js"></script>
-  <script src="js/gizmo.js"></script>
-  <script src="js/anatomy3d.js"></script>
+  <script src="js/gizmo.js?v=20261128a"></script>
+  <script src="js/anatomy3d.js?v=20261128a"></script>
   <script src="assets/lib/jsQR.js"></script>
   <script src="assets/lib/qrcodegen.js"></script>
-  <script src="js/login.js"></script>
-  <script src="js/admin.js"></script>
+  <script src="js/login.js?v=20261128a"></script>
+  <script src="js/admin.js?v=20261128a"></script>
 
   <!-- Gaya kecil yang bergantung tema & butuh CSS murni (bukan utility) -->
   <style>
@@ -545,6 +576,7 @@
     .gz-ctrl { display: flex; flex-direction: column; gap: .55rem; padding: .65rem; background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--line); border-radius: .85rem; box-shadow: var(--shadow-card); backdrop-filter: blur(6px); }
     .gz-sec { display: flex; flex-direction: column; align-items: center; gap: .1rem; }
     .gz-title { font-size: .72rem; font-weight: 700; color: var(--ink-2); text-transform: uppercase; letter-spacing: .04em; }
+    .gz-hint { font-size: .64rem; color: var(--ink-3); margin-top: -.15rem; }
     .gz-svg { touch-action: none; user-select: none; }
     .gz-svg .gz-h { opacity: .85; transition: opacity .12s ease; }
     .gz-svg .gz-h:hover { opacity: 1; }
@@ -553,9 +585,9 @@
 
     .ar-shell.with-model .ar-info { width: min(340px, 60%); bottom: 12px; left: 12px; right: auto; transform: translateY(0); border-radius: .9rem; border: 1px solid var(--line-2); }
     .ar-shell.with-model .ar-info.show { transform: translateY(0); }
-    .ar-shell.with-model .ar-frame, .ar-shell.with-model .ar-camswitch { opacity: .3; }
+    .ar-shell.with-model .ar-frame { opacity: .3; }
 
-    .ar-camswitch { position: absolute; top: 50px; right: 12px; z-index: 5; }
+    .ar-camswitch { position: absolute; top: 64px; left: 12px; right: auto; z-index: 6; }
     .ar-frame { position: absolute; inset: 0; pointer-events: none; }
     .ar-frame::before, .ar-frame::after { content: ""; position: absolute; width: 44px; height: 44px; border: 3px solid var(--brand); }
     .ar-frame::before { top: 14px; left: 14px; border-right: 0; border-bottom: 0; border-radius: 8px 0 0 0; }
@@ -797,11 +829,24 @@
       transition: width .45s cubic-bezier(.2,.8,.2,1);
     }
 
+    /* ===== Kuis: toolbar + stepper (layout referensi) ===== */
+    .quiz-topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .9rem; flex-wrap: wrap; }
+    .quiz-topbar-left, .quiz-topbar-right { display: flex; align-items: center; gap: .5rem; }
+    .quiz-topbar-mid { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: .5rem; }
+    .quiz-mode-pill { display: inline-flex; align-items: center; padding: .5rem 1.05rem; border: 1px solid #E2E8E4; border-radius: 999px; background: #FFFFFF; color: #143D32; font-size: .84rem; font-weight: 800; max-width: min(52vw, 420px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-shadow: 0 10px 25px -5px rgba(20, 61, 50, .08); }
+    .quiz-end { flex: none; }
+    .quiz-stepper { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .quiz-steps { display: flex; gap: .4rem; overflow-x: auto; padding: .15rem .1rem .3rem; scrollbar-width: thin; }
+    .quiz-step { flex: none; display: grid; place-items: center; min-width: 34px; height: 34px; padding: 0 .5rem; border: 1px solid #E2E8E4; border-radius: 10px; background: #FFFFFF; color: #143D32; font-size: .8rem; font-weight: 800; }
+    .quiz-step.done { background: #E6EFEA; border-color: #CFE0D8; }
+    .quiz-step.now { background: #143D32; border-color: #143D32; color: #FFFFFF; }
+    .quiz-count { color: #5C6B66; font-size: .8rem; font-weight: 700; white-space: nowrap; }
+
     .quiz-split {
       display: grid;
       grid-template-columns: 1fr;
-      gap: clamp(1.5rem, 3vw, 2rem);
-      align-items: start;
+      gap: clamp(1.25rem, 2.5vw, 1.75rem);
+      align-items: stretch;
     }
 
     /* — panel kiri: media (sage) — */
@@ -812,8 +857,9 @@
       background: #E6EFEA;
       border: 1px solid #E2E8E4;
       border-radius: 24px;
-      padding: 24px;
-      min-height: 320px;
+      padding: 18px;
+      min-height: 420px;
+      min-width: 0;
     }
     .quiz-badge {
       position: absolute;
@@ -837,12 +883,12 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 3rem 0 1.25rem;
+      padding: 2.4rem 0 1rem;
       min-height: 0;
     }
     .quiz-img-stage img {
       width: 100%;
-      max-height: 440px;
+      max-height: clamp(320px, 58vh, 620px);
       object-fit: contain;
       border-radius: 16px;
       display: block;
@@ -902,13 +948,24 @@
       font-size: .88rem;
       font-weight: 500;
     }
+    .quiz-instruction {
+      margin: -.15rem 0 1rem;
+      color: #5C6B66;
+      font-size: .86rem;
+      line-height: 1.5;
+    }
 
     /* — opsi jawaban — */
     .quiz-options {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: .75rem;
       margin-bottom: 1.5rem;
+    }
+    .quiz-options > .quiz-opt:last-child:nth-child(odd) { grid-column: 1 / -1; }
+    @media (max-width: 700px) {
+      .quiz-options { grid-template-columns: 1fr; }
+      .quiz-options > .quiz-opt:last-child:nth-child(odd) { grid-column: auto; }
     }
     .quiz-opt {
       display: flex;
@@ -983,10 +1040,10 @@
       padding-top: 1.1rem;
       display: flex;
       align-items: center;
-      justify-content: space-between;
       gap: .75rem;
       flex-wrap: wrap;
     }
+    .quiz-foot .quiz-btn-primary { flex: 1; justify-content: center; }
     .quiz-dots { display: flex; flex-wrap: wrap; gap: .4rem; }
     .quiz-dot {
       width: 12px;

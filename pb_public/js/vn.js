@@ -199,18 +199,21 @@
     });
   }
 
+  var logModal = null;
   function showLog() {
-    var wrap = document.createElement("div");
-    wrap.className = "modal-back show";
-    var html = '<div class="modal"><div class="mb-3 flex items-center justify-between gap-3"><h2 class="m-0">Log Buku</h2><button class="btn btn-sm btn-ghost" id="closeLog">Tutup</button></div><div class="vn-log-book">';
+    if (logModal) return;
+    var html = '<div class="vn-log-book">';
     logEntri.forEach(function (e) {
       html += '<div class="entry"><span class="who ' + (e.who === "Halaman" ? "nar" : "") + '">' + App.escapeHtml(e.who) + '</span>' + App.escapeHtml(e.teks) + '</div>';
     });
-    html += '</div></div>';
-    wrap.innerHTML = html;
-    document.body.appendChild(wrap);
-    document.getElementById("closeLog").addEventListener("click", function () { wrap.remove(); });
-    wrap.addEventListener("click", function (ev) { if (ev.target === wrap) wrap.remove(); });
+    html += '</div>';
+    logModal = App.modal({
+      id: "vnLogModal",
+      title: "Log Buku",
+      body: html,
+      confirmText: "Tutup",
+      onClose: function () { logModal = null; }
+    });
   }
 
   function doSave() {

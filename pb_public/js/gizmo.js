@@ -26,8 +26,9 @@
     var h2x = ex - Math.cos(ang + 0.4) * 11, h2y = ey - Math.sin(ang + 0.4) * 11;
     var s = '<g class="gz-h" data-axis="' + axis + '" style="cursor:grab">';
     s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + ex + '" y2="' + ey + '" stroke="' + c + '" stroke-width="4" stroke-linecap="round"/>';
+    s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + ex + '" y2="' + ey + '" stroke="transparent" stroke-width="18" pointer-events="stroke"/>';
     s += '<polygon points="' + ex + ',' + ey + ' ' + h1x + ',' + h1y + ' ' + h2x + ',' + h2y + '" fill="' + c + '"/>';
-    s += '<circle cx="' + ex + '" cy="' + ey + '" r="13" fill="transparent"/>';
+    s += '<circle cx="' + ex + '" cy="' + ey + '" r="13" fill="transparent" pointer-events="all"/>';
     s += '</g>';
     return s;
   }
@@ -38,7 +39,7 @@
     var s = '<g class="gz-r" data-axis="' + axis + '" style="cursor:grab">';
     s += '<ellipse cx="' + (0) + '" cy="0" rx="17" ry="7" fill="none" stroke="' + c + '" stroke-width="3.5"/>';
     s += '<polygon points="17,0 10,-5 10,5" fill="' + c + '"/>';
-    s += '<circle cx="0" cy="0" r="26" fill="transparent"/>';
+    s += '<circle cx="0" cy="0" r="26" fill="transparent" pointer-events="all"/>';
     s += '</g>';
     return s;
   }
@@ -53,7 +54,7 @@
     // --- Geser: diagram sumbu ---
     var mv = document.createElement("div");
     mv.className = "gz-sec";
-    mv.innerHTML = '<div class="gz-title">Geser</div>' +
+    mv.innerHTML = '<div class="gz-title">Geser</div><div class="gz-hint">Seret panah</div>' +
       '<svg class="gz-svg" width="120" height="120" viewBox="0 0 120 120">' +
       arrowSVG("x") + arrowSVG("y") + arrowSVG("z") + '</svg>';
     panel.appendChild(mv);
@@ -61,7 +62,7 @@
     // --- Putar: cincin ---
     var rt = document.createElement("div");
     rt.className = "gz-sec";
-    rt.innerHTML = '<div class="gz-title">Putar</div>' +
+    rt.innerHTML = '<div class="gz-title">Putar</div><div class="gz-hint">Seret cincin</div>' +
       '<svg class="gz-svg" width="140" height="90" viewBox="-70 -45 140 90">' +
       '<g transform="translate(-42,0)">' + ringSVG("x") + '</g>' +
       '<g transform="translate(0,0)">' + ringSVG("y") + '</g>' +
@@ -73,47 +74,51 @@
 
     // ===== interaksi geser =====
     var mvSvg = mv.querySelector("svg");
-    var dragAxis = null, lastX = 0, lastY = 0;
     mvSvg.addEventListener("pointerdown", function (e) {
-      var g = e.target.closest(".gz-h");
+      var g = e.target.closest ? e.target.closest(".gz-h") : null;
       if (!g) return;
-      dragAxis = g.dataset.axis;
-      lastX = e.clientX; lastY = e.clientY;
-      g.setPointerCapture(e.pointerId);
       e.preventDefault();
+      var axis = g.dataset.axis;
+      var lastX = e.clientX, lastY = e.clientY;
+      var move = function (ev) {
+        var dx = ev.clientX - lastX, dy = ev.clientY - lastY;
+        lastX = ev.clientX; lastY = ev.clientY;
+        var dir = ARROW_DIR[axis];
+        var proj = dx * dir[0] + dy * dir[1];
+        if (opts.onMove) opts.onMove(axis, proj);
+      };
+      var end = function () {
+        document.removeEventListener("pointermove", move);
+        document.removeEventListener("pointerup", end);
+        document.removeEventListener("pointercancel", end);
+      };
+      document.addEventListener("pointermove", move);
+      document.addEventListener("pointerup", end);
+      document.addEventListener("pointercancel", end);
     });
-    mvSvg.addEventListener("pointermove", function (e) {
-      if (!dragAxis) return;
-      var dx = e.clientX - lastX, dy = e.clientY - lastY;
-      lastX = e.clientX; lastY = e.clientY;
-      var dir = ARROW_DIR[dragAxis];
-      var proj = dx * dir[0] + dy * dir[1];
-      if (opts.onMove) opts.onMove(dragAxis, proj);
-    });
-    var endMv = function () { dragAxis = null; };
-    mvSvg.addEventListener("pointerup", endMv);
-    mvSvg.addEventListener("pointercancel", endMv);
 
     // ===== interaksi putar =====
     var rtSvg = rt.querySelector("svg");
-    var rotAxis = null, rotLastX = 0;
     rtSvg.addEventListener("pointerdown", function (e) {
-      var g = e.target.closest(".gz-r");
+      var g = e.target.closest ? e.target.closest(".gz-r") : null;
       if (!g) return;
-      rotAxis = g.dataset.axis;
-      rotLastX = e.clientX;
-      g.setPointerCapture(e.pointerId);
       e.preventDefault();
+      var axis = g.dataset.axis;
+      var lastX = e.clientX;
+      var move = function (ev) {
+        var dx = ev.clientX - lastX;
+        lastX = ev.clientX;
+        if (opts.onRotate) opts.onRotate(axis, dx * 0.02);
+      };
+      var end = function () {
+        document.removeEventListener("pointermove", move);
+        document.removeEventListener("pointerup", end);
+        document.removeEventListener("pointercancel", end);
+      };
+      document.addEventListener("pointermove", move);
+      document.addEventListener("pointerup", end);
+      document.addEventListener("pointercancel", end);
     });
-    rtSvg.addEventListener("pointermove", function (e) {
-      if (!rotAxis) return;
-      var dx = e.clientX - rotLastX;
-      rotLastX = e.clientX;
-      if (opts.onRotate) opts.onRotate(rotAxis, dx * 0.02);
-    });
-    var endRt = function () { rotAxis = null; };
-    rtSvg.addEventListener("pointerup", endRt);
-    rtSvg.addEventListener("pointercancel", endRt);
 
     return panel;
   }

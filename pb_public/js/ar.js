@@ -258,9 +258,11 @@
     }).catch(function (err) { App.toast("Gagal membuat URL file: " + err.message); });
   }
 
-  function loadModelUrl(marker, url) {
+  function loadModelUrl(marker, url, gen) {
     var cacheKey = marker.aset_3d ? marker.aset_3d.id : marker.model;
+    var stale = function () { return gen !== undefined && gen !== gen3d; };
     var finish = function (obj) {
+      if (stale()) return;
       obj.scale.setScalar(1.6);
       obj.position.set(0, 0, 0);
       model3d = obj;
@@ -271,6 +273,8 @@
       if (shell) shell.classList.add("with-model");
       var st = document.getElementById("arStatus");
       if (st) { st.textContent = "Model " + marker.nama + " tampil"; st.className = "ar-status found"; }
+      var ms = document.getElementById("modelStatus");
+      if (ms) ms.textContent = "Model " + marker.nama + " tampil.";
     };
     if (glbCache[cacheKey]) { finish(glbCache[cacheKey].clone(true)); return; }
     if (!gltfLoader) {
@@ -279,21 +283,28 @@
     }
     if (!gltfLoader) { App.toast("GLTFLoader belum dimuat. Periksa assets/lib/GLTFLoader.js"); return; }
     gltfLoader.load(url, function (gltf) {
+      if (stale()) return;
       var root = gltf.scene || (gltf.scenes && gltf.scenes[0]);
       if (!root) { App.toast("GLB tidak berisi scene."); return; }
       glbCache[cacheKey] = root;
       finish(root.clone(true));
     }, function (progress) {
+      if (stale()) return;
       if (progress.total) {
         var pct = Math.round(progress.loaded / progress.total * 100);
         var st2 = document.getElementById("arStatus");
         if (st2) { st2.textContent = "Memuat model " + pct + "%"; st2.className = "ar-status"; }
+        var ms = document.getElementById("modelStatus");
+        if (ms) ms.textContent = "Memuat model " + pct + "%…";
       }
     }, function (err) {
+      if (stale()) return;
       console.error("Gagal load GLB:", err);
       App.toast("Gagal memuat GLB: " + url);
       var st3 = document.getElementById("arStatus");
       if (st3) { st3.textContent = "Gagal memuat model"; st3.className = "ar-status err"; }
+      var ms2 = document.getElementById("modelStatus");
+      if (ms2) ms2.textContent = "Gagal memuat model. Periksa koneksi file.";
     });
   }
 
@@ -335,14 +346,43 @@
   // ============================================================
   // Viewer 3D tanpa kamera
   // ============================================================
-  function render3DView() {
+  function render3DView(preferredId) {
     var vw = document.getElementById("arView");
+    var viewGen = gen3d;
     if (!window.THREE) {
       vw.innerHTML = '<div class="ar-fallback">Three.js belum dimuat. Periksa assets/lib/three.min.js.</div>';
       return;
     }
+    var playable = (window.DATA_MARKER || []).filter(function (m) {
+      return m && m.aset_3d && m.aset_3d.file_glb;
+    });
+    if (!playable.length) {
+      vw.innerHTML = '<div class="ar-fallback">Belum ada marker dengan file GLB. Tambah aset 3D lewat panel dosen, lalu cetak QR-nya.</div>';
+      return;
+    }
+    var selected = preferredId
+      ? playable.find(function (m) { return String(m.id) === String(preferredId); })
+      : null;
+    if (!selected) {
+      selected = playable.slice().sort(function (a, b) {
+        return (Number(a.nilai_barcode) || 0) - (Number(b.nilai_barcode) || 0);
+      }).pop();
+    }
+    var picker = "";
+    if (playable.length > 1) {
+      picker = '<div class="mb-3 flex flex-wrap items-center justify-center gap-2">' +
+        '<label class="tiny" for="markerPick" style="color:#A7B5C3">Pilih model</label>' +
+        '<select class="input" id="markerPick" style="max-width:340px">' +
+        playable.map(function (m) {
+          return '<option value="' + App.escapeHtml(m.id) + '"' + (m === selected ? " selected" : "") + '>' +
+            App.escapeHtml(m.nama) + ' · QR ' + App.escapeHtml(m.nilai_barcode) + '</option>';
+        }).join("") + '</select></div>';
+    }
     vw.innerHTML =
-      '<div class="mb-4" style="color:#fff;text-align:center"><div class="eyebrow mb-2">Mode 3D</div><h3 style="color:#fff">Model Jantung — geser, putar &amp; zoom</h3></div>' +
+      '<div class="mb-4" style="color:#fff;text-align:center"><div class="eyebrow mb-2">Mode 3D</div><h3 style="color:#fff">' +
+      App.escapeHtml(selected.nama || "Model 3D") + ' — geser, putar &amp; zoom</h3></div>' +
+      picker +
+      '<div id="modelStatus" class="tiny mb-2" style="color:#A7B5C3;text-align:center">Memuat model…</div>' +
       '<div class="viewer3d" id="viewer3d" style="height:460px"><div class="hint3d">Putar kamera: seret latar · gulir: zoom</div></div>';
     var el = document.getElementById("viewer3d");
     var cv = document.createElement("canvas");
@@ -354,6 +394,10 @@
     var sc = new THREE.Scene();
     var cam = new THREE.PerspectiveCamera(45, el.clientWidth / el.clientHeight, 0.1, 100);
     cam.position.set(0, 0.4, 4);
+    // loadModelUrl/finish/dispose3D operate on these module-level handles.
+    renderer = r;
+    scene3d = sc;
+    camera3d = cam;
     sc.add(new THREE.AmbientLight(0xffffff, 0.85));
     var d = new THREE.DirectionalLight(0xffffff, 0.9);
     d.position.set(2, 3, 4);
@@ -361,11 +405,25 @@
     // controller: objek hanya bergerak via panel / tarikan canvas
     ctrl = new TransformController(null, cam);
     bindCanvasDrag(cv);
-    var asset = (window.DATA_MARKER && window.DATA_MARKER[0]) ? window.DATA_MARKER[0].aset_3d : null;
-    if (!asset || !asset.file_glb) { App.toast("Belum ada aset GLB untuk marker pertama."); return; }
+    var asset = selected.aset_3d;
     PB.fileUrl("aset_3d", asset.id, asset.file_glb).then(function (url) {
-      loadModelUrl(window.DATA_MARKER[0], url);
-    }).catch(function (err) { App.toast("Gagal membuat URL file: " + err.message); });
+      if (viewGen !== gen3d) return;
+      loadModelUrl(selected, url, viewGen);
+    }).catch(function (err) {
+      if (viewGen !== gen3d) return;
+      var msg = err && err.message ? err.message : String(err);
+      console.error("[AR] Gagal menyiapkan model:", err);
+      App.toast("Gagal menyiapkan model: " + msg);
+      var st = document.getElementById("modelStatus");
+      if (st) st.textContent = "Gagal menyiapkan model: " + msg;
+    });
+    if (playable.length > 1) {
+      var pick = document.getElementById("markerPick");
+      if (pick) pick.addEventListener("change", function () {
+        dispose3D();
+        render3DView(pick.value);
+      });
+    }
     // bar Reset + Zoom, panel geser/putar di bawahnya (kanan atas)
     var bar = document.createElement("div");
     bar.className = "flex gap-1 absolute top-3 right-3 z-10";
@@ -391,10 +449,12 @@
     // latar kanvas beku: tak ada drag/zoom — semua kontrol via panel
     cam.lookAt(0, 0, 0);
     (function loop() {
+      if (viewGen !== gen3d || renderer !== r) return;
       requestAnimationFrame(loop);
       r.render(sc, cam);
     })();
     window.addEventListener("resize", function () {
+      if (viewGen !== gen3d || renderer !== r) return;
       r.setSize(el.clientWidth, el.clientHeight, false);
       cam.aspect = el.clientWidth / el.clientHeight;
       cam.updateProjectionMatrix();

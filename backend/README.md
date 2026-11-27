@@ -62,8 +62,10 @@ Ubah kredensial itu sebelum dipakai bersama mahasiswa sungguhan.
   Khusus `marker`: dibuat/diperbarui otomatis oleh hook saat `aset_3d` (file `.glb`) disimpan,
   dan ikut terhapus saat asetnya dihapus. Panel dosen **tidak** menyediakan CRUD marker manual;
   pengelolaan QR dilakukan dari menu **AR → Cetak Marker** (cetak QR dari data marker yang ada).
-- `progres`: semua operasi = pemilik rekam (`@request.auth.id = user`).
-- `users`: baca/ubah profil sendiri; `role` tidak bisa diubah lewat API oleh pemilik akun.
+- `progres`: baca = pemilik rekam atau `dosen` (`@request.auth.id = user || @request.auth.role = 'dosen'`);
+  tulis/hapus = pemilik rekam saja, sehingga dosen tidak bisa mengubah hasil belajar mahasiswa.
+- `users`: baca = profil sendiri atau `dosen` (untuk dasbor statistik); ubah = profil sendiri;
+  `role` tidak bisa diubah lewat API oleh pemilik akun.
 - Register publik **selalu** menghasilkan `role = "mahasiswa"` apa pun isi body (dipaksa di hook).
 
 ## URL berkas

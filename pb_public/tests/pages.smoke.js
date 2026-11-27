@@ -21,7 +21,6 @@ const idContracts = [
   ["js/materi.js", "materiSearch"],
   ["js/materi.js", "markDone"],
   ["js/materi.js", "openAppendix"],
-  ["js/materi.js", "closeAppendix"],
   // kuis
   ["js/kuis.js", "mixP"],
   ["js/kuis.js", "mixN"],
@@ -38,7 +37,6 @@ const idContracts = [
   ["js/vn.js", "vnLoad"],
   ["js/vn.js", "vnRefSave"],
   ["js/vn.js", "vnRefleksi"],
-  ["js/vn.js", "closeLog"],
   // ar
   ["js/ar.js", "tabCam"],
   ["js/ar.js", "tab3d"],
@@ -60,6 +58,12 @@ const idContracts = [
   ["js/profil.js", "impFile"],
   ["js/profil.js", "impMsg"],
   ["js/profil.js", "resetBtn"],
+  // statistik (dosen)
+  ["js/statistik.js", "statRefresh"],
+  ["js/statistik.js", "statRoot"],
+  ["js/statistik.js", "statRows"],
+  ["js/statistik.js", "statSearch"],
+  ["js/statistik.js", "statCount"],
   // login
   ["js/login.js", "authForm"],
   ["js/login.js", "authMsg"],
@@ -69,13 +73,12 @@ const idContracts = [
   ["js/login.js", "aRole"],
   // admin
   ["js/admin.js", "newItem"],
-  ["js/admin.js", "cancelForm"],
   ["js/admin.js", "entForm"],
   ["js/admin.js", "formSave"],
   ["js/admin.js", "formCancel"],
   ["js/admin.js", "recordsPanel"],
-  ["js/admin.js", "recordForm"],
   ["js/admin.js", "collectionTabs"],
+  ["js/admin.js", "previewKuis"],
 ];
 
 function idsInMarkup(file) {
@@ -146,7 +149,7 @@ ok(idx.includes("Plus+Jakarta+Sans"), "index.html memuat Plus Jakarta Sans");
 ok(idx.includes("JetBrains+Mono"), "index.html memuat JetBrains Mono");
 ok(idx.includes("--brand:        #0F4D3A"), "palet brand hijau terpasang");
 // urutan script penting (config sebelum modul, app sebelum halaman)
-const order = ["js/config.js", "js/pb.js", "js/app.js", "js/home.js", "js/materi.js", "js/kuis.js", "js/vn.js", "js/ar.js", "js/profil.js", "js/login.js", "js/admin.js"];
+const order = ["js/config.js", "js/pb.js", "js/app.js", "js/home.js", "js/materi.js", "js/kuis.js", "js/vn.js", "js/ar.js", "js/profil.js", "js/statistik.js", "js/login.js", "js/admin.js"];
 let lastIdx = -1, orderOk = true;
 for (const s of order) {
   const i = idx.indexOf(s);
@@ -159,11 +162,11 @@ for (const lib of ["three.min.js", "GLTFLoader.js", "jsQR.js", "qrcodegen.js"]) 
   ok(idx.includes(lib), `lib ${lib} tetap dimuat`);
 }
 // kontrak id shell
-for (const id of ["app", "brandName", "disclaimer", "footInstitusi", "footDosen", "navAdmin", "navLogin", "navLogout"]) {
+for (const id of ["app", "brandName", "disclaimer", "footInstitusi", "footDosen", "navAdmin", "navStatistik", "navKuis", "navLogin", "navLogout"]) {
   ok(new RegExp(`id="${id}"`).test(idx), `shell punya id="${id}"`);
 }
 // nav data-nav utk active state
-for (const nav of ["materi", "kuis", "vn", "ar", "profil", "admin", "login"]) {
+for (const nav of ["materi", "kuis", "vn", "ar", "profil", "statistik", "admin", "login"]) {
   ok(new RegExp(`data-nav="${nav}"`).test(idx), `nav data-nav="${nav}" ada`);
 }
 

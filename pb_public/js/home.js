@@ -41,6 +41,13 @@
       App.render();
       return;
     }
+    // Beranda adalah dasbor progres pribadi mahasiswa; dosen diarahkan ke
+    // statistik kelas dan admin ke panel konten.
+    if (u.role === "dosen" || u.role === "admin") {
+      location.hash = u.role === "dosen" ? "#/statistik" : "#/admin";
+      App.render();
+      return;
+    }
     var p = Storage.load();
     var total = window.DATA_PERTEMUAN.length;
     var done = p.materi_selesai.length;

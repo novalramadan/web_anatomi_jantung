@@ -56,7 +56,10 @@
   function fileField(value) {
     if (!value) return null;
     var item = Array.isArray(value) ? value[0] : value;
-    return item ? { id: item.id, filename: item.filename } : null;
+    if (!item) return null;
+    // PocketBase 0.40 serializes single file fields as the filename string.
+    if (typeof item === "string") return { id: "", filename: item };
+    return item.filename ? { id: item.id || "", filename: item.filename } : null;
   }
 
   function toObject(row) {
@@ -84,7 +87,7 @@
         var img = fileField(r.gambar);
         return { id: r.id_lokal, pertemuan: r.pertemuan, level: r.level, pertanyaan: r.pertanyaan,
           opsi: r.opsi || {}, kunci: r.kunci, pembahasan: r.pembahasan,
-          gambar: img ? img.filename : "", _recordId: img ? img.id : "",
+          gambar: img ? img.filename : "", _recordId: img ? r.id : "",
           _fileName: img ? img.filename : "" };
       });
       window.DATA_KASUS = all[2].items.map(function (r) {

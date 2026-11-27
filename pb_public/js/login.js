@@ -207,7 +207,7 @@
 
   function afterAuth(u) {
     App.toast("Selamat datang, " + (u.nama || u.email) + ".");
-    location.hash = u.role === "dosen" || u.role === "admin" ? "#/admin" : "#/beranda";
+    location.hash = u.role === "dosen" ? "#/statistik" : u.role === "admin" ? "#/admin" : "#/beranda";
     App.render();
   }
 

@@ -40,7 +40,7 @@
       return;
     }
     if (user && publicRoute) {
-      location.hash = user.role === "dosen" || user.role === "admin" ? "#/admin" : "#/beranda";
+      location.hash = user.role === "dosen" ? "#/statistik" : user.role === "admin" ? "#/admin" : "#/beranda";
       return;
     }
 
@@ -79,6 +79,174 @@
     return String(s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
+  }
+
+  // ---- dialog seragam: alert / confirm / prompt / modal ----
+  var dialogSeq = 0;
+  var dialogOpen = 0;
+  var DIALOG_ICONS = {
+    info: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>',
+    question: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.4-3 4"/><path d="M12 17h.01"/></svg>',
+    success: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>',
+    warning: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 17H3z"/><path d="M12 9v5"/><path d="M12 17h.01"/></svg>',
+    danger: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg>'
+  };
+
+  function focusables(root) {
+    return Array.prototype.slice.call(root.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )).filter(function (el) { return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length); });
+  }
+
+  function buildDialog(opts) {
+    opts = opts || {};
+    var mode = opts.mode || "confirm";
+    var kind = opts.kind || (opts.danger ? "danger" : mode === "confirm" ? "question" : "info");
+    var title = opts.title || (mode === "alert" ? "Informasi" : mode === "prompt" ? "Input" : mode === "modal" ? "Detail" : "Konfirmasi");
+    var sizeCls = opts.size === "sm" ? " modal-sm" : opts.size === "lg" ? " modal-lg" : "";
+    var id = opts.id || ("appDialog" + (++dialogSeq));
+    var titleId = id + "Title";
+    var showInput = mode === "prompt";
+    var confirmText = opts.confirmText || (mode === "alert" ? "OK" : mode === "modal" ? "Tutup" : mode === "prompt" ? "Simpan" : "Lanjutkan");
+    var cancelText = opts.cancelText || "Batal";
+    var confirmCls = "btn " + (kind === "danger" ? "btn-danger" : "btn-primary");
+    var messageHtml = opts.message != null ? '<p class="modal-msg">' + escapeHtml(opts.message) + '</p>' : "";
+    var inputHtml = "";
+    if (showInput) {
+      var inputValue = opts.value == null ? "" : String(opts.value);
+      var ph = opts.placeholder ? ' placeholder="' + escapeHtml(opts.placeholder) + '"' : "";
+      inputHtml = '<label class="field mt-3"><span class="lbl">' + escapeHtml(opts.inputLabel || "Jawaban") + '</span>' +
+        (opts.multiline
+          ? '<textarea class="input" rows="3" data-dialog-input' + ph + '>' + escapeHtml(inputValue) + '</textarea>'
+          : '<input class="input" type="' + escapeHtml(opts.inputType || "text") + '" data-dialog-input value="' + escapeHtml(inputValue) + '"' + ph + '>') +
+        '</label>';
+    }
+    var footer;
+    if (opts.footer != null) {
+      footer = opts.footer; // pemanggil menyusun tombol sendiri
+    } else if (mode === "modal" || mode === "alert") {
+      footer = '<button type="button" class="' + confirmCls + '" data-dialog-confirm>' + escapeHtml(confirmText) + '</button>';
+    } else {
+      footer = '<button type="button" class="btn" data-dialog-cancel>' + escapeHtml(cancelText) + '</button>' +
+        '<button type="button" class="' + confirmCls + '" data-dialog-confirm>' + escapeHtml(confirmText) + '</button>';
+    }
+    var overlay = document.createElement("div");
+    overlay.className = "modal-back show";
+    overlay.id = id;
+    overlay.innerHTML = '<div class="modal' + sizeCls + '" role="dialog" aria-modal="true" aria-labelledby="' + titleId + '">' +
+      '<div class="modal-head">' +
+      '<span class="modal-icon ' + escapeHtml(kind) + '" aria-hidden="true">' + (DIALOG_ICONS[kind] || DIALOG_ICONS.info) + '</span>' +
+      '<div class="modal-headtext"><h2 class="modal-title" id="' + titleId + '">' + escapeHtml(title) + '</h2>' +
+      (opts.subtitle ? '<p class="modal-subtitle">' + escapeHtml(opts.subtitle) + '</p>' : '') +
+      '</div>' +
+      '<button type="button" class="modal-close" data-dialog-close aria-label="Tutup dialog">×</button>' +
+      '</div>' +
+      '<div class="modal-body">' + messageHtml + (opts.body || "") + inputHtml + '</div>' +
+      '<div class="modal-foot">' + footer + '</div>' +
+      '</div>';
+
+    var settled = false;
+    var resolveResult;
+    var result = new Promise(function (res) { resolveResult = res; });
+    var prevFocus = document.activeElement;
+    var cancelValue = function () {
+      return mode === "alert" || mode === "modal" ? true : mode === "prompt" ? null : false;
+    };
+    var close = function (value) {
+      if (settled) return;
+      settled = true;
+      overlay.remove();
+      dialogOpen = Math.max(0, dialogOpen - 1);
+      if (!dialogOpen) document.documentElement.classList.remove("dialog-open");
+      if (prevFocus && typeof prevFocus.focus === "function") {
+        try { prevFocus.focus(); } catch (e) {}
+      }
+      if (typeof opts.onClose === "function") {
+        try { opts.onClose(value); } catch (e) { console.error(e); }
+      }
+      resolveResult(value);
+    };
+    var onKey = function (e) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        close(cancelValue());
+        return;
+      }
+      if (e.key !== "Tab") return;
+      var list = focusables(overlay);
+      if (!list.length) return;
+      var first = list[0], last = list[list.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    overlay.addEventListener("keydown", onKey);
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay) { close(cancelValue()); return; }
+      var btn = e.target.closest ? e.target.closest("[data-dialog-confirm],[data-dialog-cancel],[data-dialog-close]") : null;
+      if (!btn) return;
+      if (btn.hasAttribute("data-dialog-confirm")) {
+        if (mode === "prompt") {
+          var inp = overlay.querySelector("[data-dialog-input]");
+          close(inp ? inp.value : "");
+        } else {
+          close(true);
+        }
+        return;
+      }
+      close(cancelValue());
+    });
+    var inputEl = overlay.querySelector("[data-dialog-input]");
+    if (inputEl && mode === "prompt" && !opts.multiline) {
+      inputEl.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") { e.preventDefault(); close(inputEl.value); }
+      });
+    }
+    document.body.appendChild(overlay);
+    dialogOpen++;
+    document.documentElement.classList.add("dialog-open");
+    var focusTarget = inputEl ||
+      (kind === "danger" && overlay.querySelector("[data-dialog-cancel]")) ||
+      overlay.querySelector("[data-dialog-confirm]") ||
+      overlay.querySelector(".modal-close");
+    setTimeout(function () {
+      if (!focusTarget) return;
+      focusTarget.focus();
+      if (mode === "prompt" && inputEl && inputEl.select) {
+        try { inputEl.select(); } catch (e) {}
+      }
+    }, 30);
+    return { el: overlay, close: close, result: result };
+  }
+
+  function dialog(opts) { return buildDialog(opts || {}).result; }
+  function alertDialog(message, opts) {
+    opts = opts || {};
+    opts.mode = "alert";
+    opts.message = message;
+    if (!opts.kind) opts.kind = "info";
+    if (!opts.confirmText) opts.confirmText = "OK";
+    return buildDialog(opts).result;
+  }
+  function confirmDialog(message, opts) {
+    opts = opts || {};
+    opts.mode = "confirm";
+    opts.message = message;
+    if (!opts.kind) opts.kind = opts.danger ? "danger" : "question";
+    if (!opts.confirmText) opts.confirmText = "Lanjutkan";
+    return buildDialog(opts).result;
+  }
+  function promptDialog(message, opts) {
+    opts = opts || {};
+    opts.mode = "prompt";
+    opts.message = message;
+    if (!opts.kind) opts.kind = "question";
+    if (!opts.confirmText) opts.confirmText = "Simpan";
+    return buildDialog(opts).result;
+  }
+  function modalDialog(opts) {
+    opts = opts || {};
+    opts.mode = "modal";
+    return buildDialog(opts);
   }
 
   function byId(list, id) {
@@ -217,6 +385,7 @@
     var nl = document.getElementById("navLogin");
     var lo = document.getElementById("navLogout");
     var na = document.getElementById("navAdmin");
+    var ns = document.getElementById("navStatistik");
     var links = document.getElementById("navLinks");
     var box = document.getElementById("navUser");
     var name = document.getElementById("navUserName");
@@ -224,10 +393,21 @@
     if (nl) nl.hidden = !!u;
     if (lo) lo.hidden = !u;
     if (na) na.hidden = !(u && (u.role === "admin" || u.role === "dosen"));
+    if (ns) ns.hidden = !(u && u.role === "dosen");
     if (links) links.hidden = !u;
     if (box) box.hidden = !u;
     if (name) name.textContent = u ? (u.nama || u.email || "Pengguna") : "";
     if (role) role.textContent = u ? (u.role === "dosen" ? "Dosen" : u.role === "admin" ? "Admin" : "Mahasiswa") : "";
+
+    // Kuis: dosen/admin hanya pratinjau, jadi labelnya dibedakan.
+    var nk = document.getElementById("navKuis");
+    if (nk) {
+      var isDosen = !!(u && (u.role === "dosen" || u.role === "admin"));
+      var nkLabel = nk.querySelector(".nav-label");
+      if (nkLabel) nkLabel.textContent = isDosen ? "Preview Kuis" : "Kuis";
+      if (isDosen) nk.setAttribute("title", "Pratinjau kuis (mode dosen)");
+      else nk.removeAttribute("title");
+    }
   }
 
   function setTheme(mode) {
@@ -278,6 +458,11 @@
     navigate: navigate,
     render: render,
     toast: toast,
+    dialog: dialog,
+    alert: alertDialog,
+    confirm: confirmDialog,
+    prompt: promptDialog,
+    modal: modalDialog,
     escapeHtml: escapeHtml,
     byId: byId,
     shuffle: shuffle,

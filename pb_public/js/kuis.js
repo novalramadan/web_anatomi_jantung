@@ -4,6 +4,11 @@
 
   var state = null; // sesi kuis aktif
 
+  function isStaff() {
+    var u = (window.Auth && Auth.currentUser && Auth.currentUser()) || null;
+    return !!(u && (u.role === "dosen" || u.role === "admin"));
+  }
+
   function soalForPertemuan(id) {
     if (id === 8) return App.shuffle(window.DATA_SOAL.filter(function (s) { return s.pertemuan >= 1 && s.pertemuan <= 7; })).slice(0, 10);
     if (id === 16) return App.shuffle(window.DATA_SOAL.filter(function (s) { return s.pertemuan >= 1 && s.pertemuan <= 15; })).slice(0, 10);
@@ -20,35 +25,44 @@
       opsiBaru[letters[i]] = e.teks;
       if (e.benar) kunciBaru = letters[i];
     });
-    return { id: s.id, pertemuan: s.pertemuan, level: s.level, pertanyaan: s.pertanyaan, opsi: opsiBaru, kunci: kunciBaru, pembahasan: s.pembahasan, gambar: s.gambar || s.image || null, keteranganGambar: s.keterangan_gambar || s.caption || "" };
+    return { id: s.id, pertemuan: s.pertemuan, level: s.level, pertanyaan: s.pertanyaan, opsi: opsiBaru, kunci: kunciBaru, pembahasan: s.pembahasan, gambar: s.gambar || s.image || null, keteranganGambar: s.keterangan_gambar || s.caption || "", _recordId: s._recordId || "", _fileName: s._fileName || "" };
   }
 
 
   // ---------- pilih mode ----------
   function renderPick(app) {
-    var p = Storage.load();
-    var html = '<div class="mb-6"><div class="eyebrow mb-2"><span>Kuis</span></div><h1 class="mb-3">Pilih Mode Kuis</h1><p class="lead">Latihan (pembahasan langsung) atau Ujian (timer ' + window.CONFIG.timerUjianDetik + ' detik per soal, pembahasan di akhir).</p></div>';
-    html += '<div class="grid gap-4 lg:grid-cols-2">';
+    var staff = isStaff();
+    var p = staff ? null : Storage.load();
+    var html = '<div class="mb-6"><div class="eyebrow mb-2"><span>Kuis</span></div><h1 class="mb-3">' + (staff ? 'Pratinjau Kuis' : 'Pilih Mode Kuis') + '</h1><p class="lead">' +
+      (staff ? 'Mode dosen: pilihan jawaban tidak bisa dipilih dan skor tidak disimpan. Pilih pertemuan untuk melihat soal beserta kunci dan pembahasan.'
+             : 'Latihan atau Ujian (timer ' + window.CONFIG.timerUjianDetik + ' detik per soal). Kunci dan pembahasan tidak tampil saat mengerjakan, hanya setelah kuis selesai.') + '</p></div>';
+    if (staff) {
+      html += '<div class="callout mb-4"><strong>Mode Dosen · Pratinjau</strong><p class="small mt-1">Pilihan jawaban tidak bisa dipilih dan skor tidak disimpan.</p></div>';
+    }
+    html += '<div class="grid gap-4' + (staff ? '' : ' lg:grid-cols-2') + '">';
 
     // kuis pertemuan
     html += '<div class="surface-card min-w-0 p-5"><div class="mb-3"><h2 class="m-0">Kuis per Pertemuan</h2></div><div class="grid gap-2">';
     window.DATA_PERTEMUAN.forEach(function (m) {
       var n = soalForPertemuan(m.id).length;
       var isInt = m.label_integrasi;
-      var best = p.skor_kuis[m.id];
+      var best = staff ? null : p.skor_kuis[m.id];
       var badge = best ? '<span class="badge ' + (best.persen >= window.CONFIG.ambangLulus * 100 ? 'badge-success' : 'badge-warn') + '">Terbaik ' + best.persen + '%</span>' : '';
       html += '<a class="qrow" href="#/kuis/p/' + m.id + '"><span class="qn">P' + m.id + '</span><span class="qt">' + (isInt ? '<span class="badge badge-warn mr-1.5">Integrasi</span>' : '') + App.escapeHtml(m.judul) + '</span><span class="qm"><span class="small dim">' + (isInt ? '10 soal acak' : n + ' soal') + '</span>' + badge + '</span></a>';
     });
     html += '</div></div>';
 
-    // kuis campuran
-    html += '<div class="grid gap-4">';
-    html += '<div class="surface-card p-5"><div class="mb-3"><h3 class="m-0">Kuis Campuran</h3></div>' +
-      '<label class="field"><span class="lbl">Pertemuan</span><select id="mixP" class="input"><option value="0">Semua</option>' + window.DATA_PERTEMUAN.filter(function (m) { return !m.label_integrasi; }).map(function (m) { return '<option value="' + m.id + '">P' + m.id + ' · ' + App.escapeHtml(m.judul) + '</option>'; }).join('') + '</select></label>' +
-      '<label class="field"><span class="lbl">Jumlah soal</span><select id="mixN" class="input"><option selected>10</option></select></label>' +
-      '<label class="field"><span class="lbl">Level</span><select id="mixL" class="input"><option value="">Semua</option><option value="C2">C2</option><option value="C3">C3</option><option value="C4">C4</option></select></label>' +
-      '<button class="btn btn-primary btn-block" id="mixStart" type="button">Mulai Kuis Campuran</button></div>';
-    html += '</div></div>';
+    // kuis campuran (mahasiswa saja)
+    if (!staff) {
+      html += '<div class="grid gap-4">';
+      html += '<div class="surface-card p-5"><div class="mb-3"><h3 class="m-0">Kuis Campuran</h3></div>' +
+        '<label class="field"><span class="lbl">Pertemuan</span><select id="mixP" class="input"><option value="0">Semua</option>' + window.DATA_PERTEMUAN.filter(function (m) { return !m.label_integrasi; }).map(function (m) { return '<option value="' + m.id + '">P' + m.id + ' · ' + App.escapeHtml(m.judul) + '</option>'; }).join('') + '</select></label>' +
+        '<label class="field"><span class="lbl">Jumlah soal</span><select id="mixN" class="input"><option selected>10</option></select></label>' +
+        '<label class="field"><span class="lbl">Level</span><select id="mixL" class="input"><option value="">Semua</option><option value="C2">C2</option><option value="C3">C3</option><option value="C4">C4</option></select></label>' +
+        '<button class="btn btn-primary btn-block" id="mixStart" type="button">Mulai Kuis Campuran</button></div>';
+      html += '</div>';
+    }
+    html += '</div>';
 
     app.innerHTML = html;
 
@@ -75,14 +89,34 @@
       mode: opts.mode || "latihan",
       judul: opts.judul || "",
       timer: null,
+      timerIdx: null,
       sisa: window.CONFIG.timerUjianDetik,
-      locked: false
+      locked: false,
+      preview: false
+    };
+    renderSoal(app);
+  }
+
+  // ---------- pratinjau dosen (read-only) ----------
+  function startPreview(app, soalList, opts) {
+    state = {
+      soal: soalList.map(normalizeSoal),
+      idx: 0,
+      jawaban: [],
+      mode: "pratinjau",
+      judul: opts.judul || "",
+      timer: null,
+      timerIdx: null,
+      sisa: window.CONFIG.timerUjianDetik,
+      locked: true,
+      preview: true
     };
     renderSoal(app);
   }
 
   function renderSoal(app) {
     var s = state.soal[state.idx];
+    var preview = !!state.preview;
     var letters = ["A", "B", "C", "D", "E"];
     var isLast = state.idx === state.soal.length - 1;
 
@@ -109,60 +143,66 @@
       (imgCaption ? '<p class="quiz-caption">' + App.escapeHtml(imgCaption) + '</p>' : '') +
       '</aside>';
 
-    // —— header atas: kembali, judul, timer ——
-    var headerBar = '<div class="quiz-head-bar">' +
-      '<div class="quiz-head-left">' +
-      '<button type="button" class="quiz-back" id="quitQuiz">← Kembali ke Modul</button>' +
-      (state.judul ? '<h2 class="quiz-title-bar">' + App.escapeHtml(state.judul) + '</h2>' : '') +
+    // —— toolbar atas + stepper nomor soal ——
+    var pillText = App.escapeHtml(state.judul || "Kuis");
+    if (preview) pillText += " · Mode Dosen · Pratinjau";
+    var topBar = '<div class="quiz-topbar">' +
+      '<div class="quiz-topbar-left">' +
+      '<button type="button" class="quiz-back" id="quitQuiz">← Kembali</button>' +
       '</div>' +
-      (state.mode === "ujian" ? '<span class="quiz-timer" id="timerBadge" aria-live="off">&#9201; ' + state.sisa + 's</span>' : '') +
-      '</div>';
+      '<div class="quiz-topbar-mid">' +
+      '<span class="quiz-mode-pill">' + pillText + '</span>' +
+      (!preview && state.mode === "ujian" ? '<span class="quiz-timer" id="timerBadge" aria-live="off">&#9201; ' + state.sisa + 's</span>' : '') +
+      '</div>' +
+      '<div class="quiz-topbar-right">' +
+      (preview ? '' : '<button type="button" class="quiz-btn-primary quiz-end" id="endQuiz">Akhiri</button>') +
+      '</div></div>';
 
-    // —— progress bar ——
-    var pct = App.pct(state.idx + 1, state.soal.length);
-    var progressBar = '<div class="quiz-progress" role="progressbar" aria-label="Progres soal" aria-valuenow="' + (state.idx + 1) + '" aria-valuemin="1" aria-valuemax="' + state.soal.length + '"><i style="width:' + pct + '%"></i></div>';
+    var stepsHtml = "";
+    for (var si = 0; si < state.soal.length; si++) {
+      var scls = "quiz-step" + (state.jawaban[si] ? " done" : "") + (si === state.idx ? " now" : "");
+      stepsHtml += '<span class="' + scls + '" title="Soal ' + (si + 1) + (state.jawaban[si] ? ' (dijawab)' : '') + '">' + (si + 1) + '</span>';
+    }
+    var stepper = '<div class="quiz-stepper"><div class="quiz-steps" aria-label="Nomor soal">' + stepsHtml + '</div>' +
+      '<div class="quiz-count">Pertanyaan ' + (state.idx + 1) + ' dari ' + state.soal.length + '</div></div>';
 
     var optHtml = '<div class="quiz-options">';
     letters.forEach(function (L) {
       var answered = state.jawaban[state.idx];
-      var chosen = answered && answered.pilih === L;
+      var chosen = !preview && answered && answered.pilih === L;
       var isKey = L === s.kunci;
       var cls = "quiz-opt";
       var disabled = "";
-      if (answered) {
+      if (preview) {
         disabled = " disabled";
         if (isKey) cls += " is-correct";
-        else if (chosen) cls += (state.mode === "ujian" ? " is-selected" : " is-wrong");
+      } else if (chosen) {
+        cls += " is-selected";
       }
       optHtml += '<button type="button" class="' + cls + '" data-opt="' + L + '"' + disabled + '><span class="quiz-opt-key">' + L + '</span><span class="quiz-opt-text">' + App.escapeHtml(s.opsi[L]) + '</span></button>';
     });
     optHtml += '</div>';
 
-    var feedbackHtml = "";
-    if (state.jawaban[state.idx] && state.mode === "latihan") {
-      var correct = state.jawaban[state.idx].benar;
-      feedbackHtml = '<div class="callout ' + (correct ? 'c-teal' : 'c-red') + ' mt-5"><strong>' + (correct ? '✓ Benar.' : '✗ Belum tepat. Kunci: ' + s.kunci + '.') + '</strong> ' + App.escapeHtml(s.pembahasan) + '</div>';
-    } else if (state.jawaban[state.idx] && state.mode === "ujian") {
-      feedbackHtml = '<p class="small dim mt-5">Jawaban terkunci. Pembahasan tampil di akhir sesi.</p>';
+    var feedbackHtml;
+    if (preview) {
+      feedbackHtml = '<div class="callout mt-5"><strong>Kunci: ' + s.kunci + '. ' + App.escapeHtml(s.opsi[s.kunci]) + '</strong>' +
+        '<p class="small mt-1">' + App.escapeHtml(s.pembahasan || "Belum ada pembahasan.") + '</p></div>';
+    } else {
+      feedbackHtml = '<p class="quiz-hint small dim mt-5">Kamu bisa mengganti atau membatalkan pilihan sebelum menekan Selanjutnya/Selesai Kuis.</p>';
     }
 
-    var nextLabel = isLast ? "Selesai Kuis" : "Selanjutnya";
+    var nextLabel = isLast ? (preview ? "Selesai Preview" : "Selesai Kuis") : "Selanjutnya";
     var nextIcon = isLast ? "&#10003;" : "&#8594;";
-    // bulatan nomor soal: hijau tua = sudah dijawab, ring = soal aktif
-    var dots = "";
-    for (var di = 0; di < state.soal.length; di++) {
-      var dcls = "quiz-dot" + (state.jawaban[di] ? " done" : "") + (di === state.idx ? " now" : "");
-      dots += '<span class="' + dcls + '" title="Soal ' + (di + 1) + '"></span>';
-    }
     var footHtml = '<footer class="quiz-foot">' +
       '<button class="quiz-btn-ghost" id="prevBtn" type="button"' + (state.idx === 0 ? " disabled" : "") + '>&#8592; Sebelumnya</button>' +
-      '<div class="quiz-dots" aria-hidden="true">' + dots + '</div>' +
       '<button class="quiz-btn-primary" id="nextBtn" type="button">' + nextLabel + ' ' + nextIcon + '</button>' +
       '</footer>';
 
+    var typeLabel = "Pilihan Ganda" + (s.level ? " · " + s.level : "");
     var contentHtml = '<section class="quiz-content">' +
       '<header class="quiz-head">' +
-        '<div class="quiz-eyebrow">Pertanyaan ' + (state.idx + 1) + ' dari ' + state.soal.length + (s.level ? ' · ' + s.level : '') + '</div>' +
+        '<span class="quiz-eyebrow">' + App.escapeHtml(typeLabel) + '</span>' +
+        '<p class="quiz-instruction">Pilih satu jawaban yang paling tepat.</p>' +
         '<h1 class="quiz-title">' + App.escapeHtml(s.pertanyaan) + '</h1>' +
         (subTitle ? '<div class="quiz-subtitle">Pertemuan ' + s.pertemuan + ' · ' + App.escapeHtml(subTitle) + '</div>' : '') +
       '</header>' +
@@ -171,7 +211,7 @@
       footHtml +
       '</section>';
 
-    var html = '<div class="quiz-wrap">' + headerBar + progressBar + '<div class="quiz-split">' + mediaHtml + contentHtml + '</div></div>';
+    var html = '<div class="quiz-wrap">' + topBar + stepper + '<div class="quiz-split">' + mediaHtml + contentHtml + '</div></div>';
 
     app.innerHTML = html;
 
@@ -185,40 +225,59 @@
       });
     }
 
-    app.querySelectorAll("[data-opt]").forEach(function (b) {
-      b.addEventListener("click", function () { answer(b.dataset.opt); });
-    });
+    if (!preview) {
+      app.querySelectorAll("[data-opt]").forEach(function (b) {
+        b.addEventListener("click", function () { answer(b.dataset.opt); });
+      });
+    }
     var nb = document.getElementById("nextBtn");
     if (nb) nb.addEventListener("click", function () {
       state.idx++;
-      if (state.idx >= state.soal.length) renderResult(app);
-      else renderSoal(app);
+      if (state.idx >= state.soal.length) {
+        if (preview) {
+          state = null;
+          App.navigate("#/kuis");
+        } else {
+          renderResult(app);
+        }
+      } else {
+        renderSoal(app);
+      }
+      if (window.scrollTo) window.scrollTo({ top: 0, behavior: "auto" });
     });
     var pb = document.getElementById("prevBtn");
     if (pb) pb.addEventListener("click", function () {
-      if (state.idx > 0) { state.idx--; renderSoal(app); }
+      if (state.idx > 0) { state.idx--; renderSoal(app); if (window.scrollTo) window.scrollTo({ top: 0, behavior: "auto" }); }
     });
-    var qb = document.getElementById("quitQuiz");
-    if (qb) qb.addEventListener("click", function () {
+    var quit = function () {
       stopTimer();
       state = null;
       App.navigate("#/kuis");
-    });
+    };
+    var qb = document.getElementById("quitQuiz");
+    if (qb) qb.addEventListener("click", quit);
+    var eb = document.getElementById("endQuiz");
+    if (eb) eb.addEventListener("click", quit);
 
-    if (state.mode === "ujian") startTimer(app);
+    if (!preview && state.mode === "ujian" && state.timerIdx !== state.idx) startTimer(app);
   }
 
   function answer(L) {
-    if (state.locked || state.jawaban[state.idx]) return;
+    if (!state || state.preview || state.locked) return;
     var s = state.soal[state.idx];
-    var benar = L === s.kunci;
-    state.jawaban[state.idx] = { id: s.id, pilih: L, benar: benar };
+    var current = state.jawaban[state.idx];
+    if (current && current.pilih === L) {
+      delete state.jawaban[state.idx];
+    } else {
+      state.jawaban[state.idx] = { id: s.id, pilih: L, benar: L === s.kunci };
+    }
     var app = document.getElementById("app");
-    renderSoal(app);
+    if (app) renderSoal(app);
   }
 
   function startTimer(app) {
     stopTimer();
+    state.timerIdx = state.idx;
     state.sisa = window.CONFIG.timerUjianDetik;
     updateTimerBadge();
     state.timer = setInterval(function () {
@@ -248,6 +307,7 @@
 
   // ---------- hasil ----------
   function renderResult(app) {
+    if (!state || state.preview) return;
     stopTimer();
     var benar = state.jawaban.filter(function (j) { return j && j.benar; }).length;
     var total = state.soal.length;
@@ -317,10 +377,9 @@
       var m = App.byId(window.DATA_PERTEMUAN, pid);
       if (!m) { App.navigate("#/kuis"); return; }
       var isInt = m.label_integrasi;
-      startSession(app, soalForPertemuan(pid), {
-        mode: "latihan",
-        judul: isInt ? "Kuis Integrasi P" + pid : "Kuis P" + pid
-      });
+      var judul = isInt ? "Kuis Integrasi P" + pid : "Kuis P" + pid;
+      if (isStaff()) startPreview(app, soalForPertemuan(pid), { judul: judul });
+      else startSession(app, soalForPertemuan(pid), { mode: "latihan", judul: judul });
       return;
     }
     renderPick(app);

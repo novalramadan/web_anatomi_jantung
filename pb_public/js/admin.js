@@ -64,15 +64,17 @@
   // dosen-only; server rules stay the real guard.
   function render(app) {
     if (!Auth.requireRole("dosen")) return;
-    app.innerHTML = '<div class="mb-6"><div class="eyebrow mb-2">Kelola Konten</div><h1>Panel Dosen</h1>' +
+    app.innerHTML = '<div class="mb-6"><div class="eyebrow mb-2">Kelola Konten</div>' +
+      '<div class="flex flex-wrap items-center justify-between gap-3"><h1 class="m-0">Panel Dosen</h1>' +
+      '<a href="#/kuis" id="previewKuis" class="btn btn-sm">Preview Kuis</a></div>' +
       '<p class="small muted">Perubahan tersimpan langsung di PocketBase.</p></div>' +
-      '<div class="flex flex-wrap gap-2 mb-4" id="collectionTabs"></div><div id="recordsPanel">Memuat…</div><div id="recordForm"></div>';
+      '<div class="flex flex-wrap gap-2 mb-4" id="collectionTabs"></div><div id="recordsPanel">Memuat…</div>';
     var tabs = app.querySelector("#collectionTabs");
     Object.keys(SCHEMA).forEach(function (name) {
       var btn = document.createElement("button");
       btn.className = "btn btn-sm" + (selected === name ? " btn-primary" : "");
       btn.textContent = LABELS[name];
-      btn.addEventListener("click", function () { selected = name; currentPage = 1; app.querySelector("#recordForm").innerHTML = ""; render(app); });
+      btn.addEventListener("click", function () { selected = name; currentPage = 1; render(app); });
       tabs.appendChild(btn);
     });
     loadRecords(app);
@@ -756,6 +758,7 @@
 
   function fileField(value) {
     var item = Array.isArray(value) ? value[0] : value;
+    if (typeof item === "string") return { filename: item };
     return item && item.filename ? item : { filename: "(berkas)" };
   }
 
@@ -772,42 +775,55 @@
     });
   }
 
+  var formDialog = null;
+
+  // Tambah/Edit tampil sebagai pop up ber-backdrop blur: halaman tidak lagi
+  // menggulir ke form di bawah tabel, dan scroll halaman dikunci dialog.
   function openForm(app, record) {
-    var panel = app.querySelector("#recordForm");
     var collection = selected;
     var fields = SCHEMA[collection];
     var rel = fields.some(function (f) { return f[1] === "R"; });
     var idSpec = fields.find(function (f) { return f[0] === "id_lokal"; });
+    var closed = false;
+    if (formDialog) formDialog.close();
+    var dialog = App.modal({
+      id: "adminFormModal",
+      title: (record ? "Edit " : "Tambah ") + LABELS[collection],
+      subtitle: "Perubahan tersimpan langsung di PocketBase.",
+      kind: record ? "info" : "success",
+      size: "lg",
+      body: '<p class="small muted m-0">Memuat…</p>',
+      footer: '<button type="button" class="btn" id="formCancel" data-dialog-close>Batal</button>' +
+        '<button type="submit" form="entForm" class="btn btn-primary" id="formSave" disabled>Simpan</button>',
+      onClose: function () { closed = true; if (formDialog === dialog) formDialog = null; }
+    });
+    formDialog = dialog;
+    var panel = dialog.el;
     panel.__jsonEditors = {};
     var make = function (assets, autoId) {
-      // Tab bisa berganti selama fetch; jangan pasang form koleksi lama.
-      if (selected !== collection) return;
+      // Dialog bisa ditutup atau tab berganti selama fetch.
+      if (closed || selected !== collection) return;
       var body = fields.map(function (f) { return fieldHtml(f[0], f, record, assets); }).join("");
       var note = NOTES[collection] ? '<p class="small muted" data-note="' + esc(collection) + '">' + esc(NOTES[collection]) + '</p>' : "";
-      panel.innerHTML = '<div class="surface-card mt-4 p-5"><div class="flex justify-between items-center mb-2">' +
-        '<h3 class="m-0">' + (record ? "Edit" : "Tambah") + " " + esc(LABELS[collection]) + '</h3>' +
-        '<button type="button" class="btn btn-sm" id="cancelForm">Tutup</button></div>' +
-        '<form id="entForm" novalidate data-ent="' + esc(collection) + '">' + note + body +
-        '<div class="flex gap-2 mt-3"><button class="btn btn-primary" type="submit" id="formSave">Simpan</button>' +
-        '<button class="btn" type="button" id="formCancel">Batal</button></div></form></div>';
+      panel.querySelector(".modal-body").innerHTML =
+        '<form id="entForm" novalidate data-ent="' + esc(collection) + '">' + note + body + '</form>';
       if (idSpec) {
         var idEl = panel.querySelector('[data-field="id_lokal"]');
         if (idEl) idEl.value = record ? (record.id_lokal == null ? "" : record.id_lokal) : autoId;
       }
       mountJsonEditors(panel, fields, record);
-      var close = function () { panel.innerHTML = ""; panel.__jsonEditors = {}; };
-      panel.querySelector("#cancelForm").addEventListener("click", close);
-      panel.querySelector("#formCancel").addEventListener("click", close);
+      var saveBtn = panel.querySelector("#formSave");
+      if (saveBtn) saveBtn.disabled = false;
       panel.querySelector("#entForm").addEventListener("submit", function (e) {
         e.preventDefault();
-        saveForm(app, panel, record);
+        saveForm(app, panel, dialog, record);
       });
-      panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
     };
     Promise.all([
       rel ? relationOptions() : Promise.resolve([]),
       !record && idSpec ? nextLocalId(collection, idSpec[1]) : Promise.resolve(null)
-    ]).then(function (r) { make(r[0], r[1]); }).catch(fail);
+    ]).then(function (r) { make(r[0], r[1]); })
+      .catch(function (e) { fail(e); if (!closed) dialog.close(); });
   }
 
   function collect(panel, schema, record) {
@@ -859,36 +875,44 @@
     return json;
   }
 
-  function saveForm(app, panel, record) {
+  function saveForm(app, panel, dialog, record) {
     if (busy) return;
     var btn = panel.querySelector("#formSave");
     var body;
     try { body = collect(panel, SCHEMA[selected], record); }
     catch (err) { App.toast(err.message); return; }
     busy = true;
-    btn.disabled = true;
+    if (btn) btn.disabled = true;
     var url = "/api/collections/" + selected + "/records" + (record ? "/" + encodeURIComponent(record.id) : "");
     PB.request(url, { method: record ? "PATCH" : "POST", body: body }).then(function () {
       App.toast("Tersimpan.");
-      panel.innerHTML = "";
+      dialog.close();
       panel.__jsonEditors = {};
       return PB.reload();
     }).then(function () { loadRecords(app); })
       .catch(fail)
-      .then(function () { busy = false; btn.disabled = false; });
+      .then(function () { busy = false; if (btn) btn.disabled = false; });
   }
 
   function deleteRecord(app, id) {
     var r = records.find(function (x) { return x.id === id; });
-    if (!confirm("Hapus " + LABELS[selected] + " \"" + (r ? title(r) : id) + "\"?")) return;
-    PB.request("/api/collections/" + selected + "/records/" + encodeURIComponent(id), { method: "DELETE" })
-      .then(function () {
-        App.toast("Dihapus.");
-        return PB.reload();
-      })
-      .then(function () { loadRecords(app); })
-      .catch(fail);
+    var label = LABELS[selected];
+    return App.confirm("Hapus " + label + " \"" + (r ? title(r) : id) + "\"?", {
+      title: "Hapus " + label,
+      confirmText: "Hapus",
+      danger: true
+    }).then(function (ok) {
+      if (!ok) return;
+      return PB.request("/api/collections/" + selected + "/records/" + encodeURIComponent(id), { method: "DELETE" })
+        .then(function () {
+          App.toast("Dihapus.");
+          return PB.reload();
+        })
+        .then(function () { loadRecords(app); })
+        .catch(fail);
+    });
   }
 
   App.add("admin", render);
+  if (App.onLeave) App.onLeave(function () { if (formDialog) formDialog.close(); });
 })();

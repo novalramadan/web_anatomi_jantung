@@ -23,6 +23,7 @@
     var p = Storage.load();
     var u = (window.Auth && Auth.currentUser()) || null;
     var roleLabel = !u ? "" : u.role === "dosen" ? "Dosen" : u.role === "admin" ? "Admin" : "Mahasiswa";
+    var isMahasiswa = !u || u.role === "mahasiswa";
     var idLabel = roleLabel ? "Nama " + roleLabel.toLowerCase() + " (opsional)" : "Nama (opsional)";
     var idPlaceholder = roleLabel === "Dosen" ? "Tulis nama dosen" : roleLabel === "Admin" ? "Tulis nama admin" : "Tulis namamu";
     var done = p.materi_selesai.length;
@@ -35,7 +36,12 @@
       return '<div class="stat"><span class="k">' + v + '</span><span class="v">' + label + '</span></div>';
     }
 
-    var html = '<div class="mb-6"><div class="eyebrow mb-2"><span>Profil</span></div><h1 class="mb-3">Profil & Pengaturan</h1><p class="lead">Semua data tersimpan di perangkat ini (localStorage). Tidak ada yang dikirim ke server.</p></div>';
+    var lead = isMahasiswa
+      ? "Statistik dan lencana hasil belajarmu tersimpan di akun ini. Progres disinkronkan ke server saat kamu belajar."
+      : u && u.role === "dosen"
+        ? "Kelola data akun dan pengaturan tampilan. Statistik seluruh mahasiswa ada di menu Statistik."
+        : "Kelola data akun dan pengaturan tampilan.";
+    var html = '<div class="mb-6"><div class="eyebrow mb-2"><span>Profil</span></div><h1 class="mb-3">Profil & Pengaturan</h1><p class="lead">' + lead + '</p></div>';
 
     // data akun yang sedang login
     if (u) {
@@ -49,27 +55,37 @@
         '</dl></div>';
     }
 
-    // nama pemain
-    html += '<div class="surface-card p-5"><h3 class="mb-3">Identitas</h3><label class="field"><span class="lbl">' + App.escapeHtml(idLabel) + '</span><input type="text" id="namaPemain" class="input" value="' + App.escapeHtml(p.nama_pemain || "") + '" placeholder="' + App.escapeHtml(idPlaceholder) + '"></label></div>';
+    // nama pemain — hanya identitas belajar mahasiswa
+    if (isMahasiswa) {
+      html += '<div class="surface-card p-5"><h3 class="mb-3">Identitas</h3><label class="field"><span class="lbl">' + App.escapeHtml(idLabel) + '</span><input type="text" id="namaPemain" class="input" value="' + App.escapeHtml(p.nama_pemain || "") + '" placeholder="' + App.escapeHtml(idPlaceholder) + '"></label></div>';
+    }
 
-    // statistik
-    html += '<div class="surface-card mt-4 p-5"><h3 class="mb-3">Statistik</h3><div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">' +
-      statCard(done + "/" + total, "Materi selesai") +
-      statCard(kuisDiambil, "Kuis diambil") +
-      statCard(rataRata + "%", "Rata-rata skor") +
-      statCard(kasus + "/" + window.DATA_KASUS.length, "Kasus selesai") +
-      '</div>' +
-      '<div class="mt-4"><div class="small dim mb-1">Progres keseluruhan</div><div class="bar lg"><i style="width:' + App.totalProgress() + '%"></i></div></div></div>';
+    // statistik + lencana — hasil belajar milik mahasiswa sendiri
+    if (isMahasiswa) {
+      html += '<div class="surface-card mt-4 p-5"><h3 class="mb-3">Statistik</h3><div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">' +
+        statCard(done + "/" + total, "Materi selesai") +
+        statCard(kuisDiambil, "Kuis diambil") +
+        statCard(rataRata + "%", "Rata-rata skor") +
+        statCard(kasus + "/" + window.DATA_KASUS.length, "Kasus selesai") +
+        '</div>' +
+        '<div class="mt-4"><div class="small dim mb-1">Progres keseluruhan</div><div class="bar lg"><i style="width:' + App.totalProgress() + '%"></i></div></div></div>';
 
-    // lencana
-    html += '<div class="surface-card mt-4 p-5"><h3 class="mb-3">Lencana</h3><div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">';
-    var owned = lencana(p);
-    var allBadges = [["Pembuka Jalan", "Menyelesaikan 1 pertemuan"], ["Setengah Jalan", "8 pertemuan selesai"], ["Fisiolog Ulang", "16 pertemuan selesai"], ["Lulus Pertama", "Kuis pertama lulus"], ["Rajin Menguji", "Lulus 5 kuis"], ["Klinis Teliti", "Kasus 3 bintang"], ["Mahasiswa Andalan", "Semua kasus 3 bintang"], ["Penjelajah AR", "Semua marker dipindai"]];
-    allBadges.forEach(function (b) {
-      var has = owned.some(function (o) { return o[0] === b[0]; });
-      html += '<div class="surface-card p-4' + (has ? '' : ' opacity-40') + '"><strong class="' + (has ? 'text-brand' : 'text-ink-3') + '">' + (has ? "★" : "☆") + " " + b[0] + '</strong><p class="tiny muted m-0">' + b[1] + '</p></div>';
-    });
-    html += '</div></div>';
+      html += '<div class="surface-card mt-4 p-5"><h3 class="mb-3">Lencana</h3><div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">';
+      var owned = lencana(p);
+      var allBadges = [["Pembuka Jalan", "Menyelesaikan 1 pertemuan"], ["Setengah Jalan", "8 pertemuan selesai"], ["Fisiolog Ulang", "16 pertemuan selesai"], ["Lulus Pertama", "Kuis pertama lulus"], ["Rajin Menguji", "Lulus 5 kuis"], ["Klinis Teliti", "Kasus 3 bintang"], ["Mahasiswa Andalan", "Semua kasus 3 bintang"], ["Penjelajah AR", "Semua marker dipindai"]];
+      allBadges.forEach(function (b) {
+        var has = owned.some(function (o) { return o[0] === b[0]; });
+        html += '<div class="surface-card p-4' + (has ? '' : ' opacity-40') + '"><strong class="' + (has ? 'text-brand' : 'text-ink-3') + '">' + (has ? "★" : "☆") + " " + b[0] + '</strong><p class="tiny muted m-0">' + b[1] + '</p></div>';
+      });
+      html += '</div></div>';
+    }
+
+    // dosen tidak punya statistik pribadi; arahkan ke data seluruh mahasiswa
+    if (u && u.role === "dosen") {
+      html += '<div class="surface-card mt-4 p-5"><div class="flex flex-wrap items-center justify-between gap-3">' +
+        '<div><h3 class="m-0">Statistik Mahasiswa</h3><p class="small muted m-0">Lihat progres materi, kuis, dan kasus seluruh mahasiswa.</p></div>' +
+        '<a class="btn btn-primary" href="#/statistik">Buka Statistik Mahasiswa</a></div></div>';
+    }
 
     // pengaturan
     var s = p.pengaturan || {};
@@ -82,7 +98,8 @@
     app.innerHTML = html;
 
     // bindings
-    document.getElementById("namaPemain").addEventListener("change", function () {
+    var namaEl = document.getElementById("namaPemain");
+    if (namaEl) namaEl.addEventListener("change", function () {
       Storage.update(function (pp) { pp.nama_pemain = this.value; }.bind(this));
       App.toast("Nama disimpan.");
     });

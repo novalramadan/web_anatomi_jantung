@@ -2,7 +2,7 @@
 // Creates content + aset_3d + progres collections. Idempotent per collection name.
 // API rules:
 //   content + aset_3d : list/view -> any logged-in user; create/update/delete -> role == "dosen"
-//   progres           : all ops -> own record only
+//   progres           : read -> owner or dosen; write/delete -> owner only (migration 1795623869)
 migrate((app) => {
   const exists = (name) => {
     try { app.findCollectionByNameOrId(name); return true; } catch (e) { return false; }

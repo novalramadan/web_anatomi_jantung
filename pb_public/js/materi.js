@@ -347,30 +347,21 @@
   /* ---------- lampiran (modal) ---------- */
 
   function appendixHtml(d) {
-    return '<div class="flex items-center justify-between gap-3 mb-3"><h2 id="appTitle" class="m-0">Lampiran Ringkas</h2>'
-      + '<button class="btn btn-ghost btn-sm" id="closeAppendix" aria-label="Tutup">Tutup</button></div>'
-      + accordionHtml('Rumus ringkas', tableHtml({ judul: "Rumus", kolom: ["Besaran", "Rumus", "Catatan"], baris: d.rumus }), true)
+    return accordionHtml('Rumus ringkas', tableHtml({ judul: "Rumus", kolom: ["Besaran", "Rumus", "Catatan"], baris: d.rumus }), true)
       + accordionHtml('Nilai normal dewasa', tableHtml({ judul: "Nilai normal (perkiraan)", kolom: ["Parameter", "Nilai"], baris: d.normal }))
       + accordionHtml('Glosarium', tableHtml({ judul: "Istilah fisiologi", kolom: ["Istilah", "Definisi"], baris: d.glosarium }));
   }
 
+  var appendixModal = null;
   function openAppendix() {
-    var old = document.getElementById("appendixModal");
-    if (old) { old.remove(); return; }
-    var overlay = document.createElement("div");
-    overlay.id = "appendixModal";
-    overlay.className = "modal-back show";
-    overlay.innerHTML = '<div class="modal" role="dialog" aria-modal="true" aria-labelledby="appTitle">' + appendixHtml(window.DATA_LAMPIRAN) + '</div>';
-    document.body.appendChild(overlay);
-    var closeBtn = document.getElementById("closeAppendix");
-    closeBtn.focus();
-    closeBtn.addEventListener("click", function () { overlay.remove(); });
-    overlay.addEventListener("click", function (e) { if (e.target === overlay) overlay.remove(); });
-    document.addEventListener("keydown", function closeKey(e) {
-      if (e.key === "Escape" && document.getElementById("appendixModal")) {
-        document.getElementById("appendixModal").remove();
-        document.removeEventListener("keydown", closeKey);
-      }
+    if (appendixModal) { appendixModal.close(); return; }
+    appendixModal = App.modal({
+      id: "appendixModal",
+      title: "Lampiran Ringkas",
+      body: appendixHtml(window.DATA_LAMPIRAN),
+      size: "lg",
+      confirmText: "Tutup",
+      onClose: function () { appendixModal = null; }
     });
   }
 
