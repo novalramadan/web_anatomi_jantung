@@ -1,7 +1,8 @@
 /* js/gizmo.js — Panel kontrol transformasi 2D untuk objek 3D (Three.js).
    - Diagram sumbu X/Y/Z: seret panah untuk geser objek.
-   - Cincin X/Y/Z: seret cincin untuk memutar objek di sumbu tsb.
-   - Tombol Reset (posisi awal) & Zoom +/-.
+   - Cincin X/Y/Z: seret cincin (baris tak bertumpuk) untuk memutar objek.
+   - Tombol ⟲/⟳ per sumbu: kontrol putar utama yang selalu terlihat & mudah ditekan.
+   - Tombol Reset (posisi awal) & Zoom +/- (di bar luar).
    Objek hanya bergerak melalui panel ini (pointer di latar tidak menggerakkan objek). */
 (function () {
   "use strict";
@@ -14,6 +15,8 @@
     z: new THREE.Vector3(0, 0, 1)
   };
   var ARROW_DIR = { x: [1, 0], y: [0, -1], z: [-0.72, 0.72] }; // pseudo-3D: Z ke arah kamera bawah-kiri
+  var ROT_STEP = 0.22; // radian per klik tombol putar (~12,6°): langkah jelas terlihat
+  var ROT_AXES = ["x", "y", "z"];
 
   function arrowSVG(axis) {
     var c = COLORS[axis];
@@ -33,15 +36,38 @@
     return s;
   }
 
-  function ringSVG(axis) {
+  // Tiga cincin ditumpuk sebagai baris terpisah (bukan tiga lingkaran hit yang
+  // saling menutupi): tiap baris punya area seret selebar SVG sehingga X/Y/Z
+  // semuanya bisa dijangkau jari di layar ponsel.
+  function ringSVG(axis, row) {
     var c = COLORS[axis];
-    // tiga cincin sejajar; cincin digambar sebagai elips untuk kesan 3D
+    var cy = 14 + row * 28;
+    var cx = 70, rx = 46;
     var s = '<g class="gz-r" data-axis="' + axis + '" style="cursor:grab">';
-    s += '<ellipse cx="' + (0) + '" cy="0" rx="17" ry="7" fill="none" stroke="' + c + '" stroke-width="3.5"/>';
-    s += '<polygon points="17,0 10,-5 10,5" fill="' + c + '"/>';
-    s += '<circle cx="0" cy="0" r="26" fill="transparent" pointer-events="all"/>';
+    // area seret per baris (28px, tanpa tumpang tindih antar sumbu)
+    s += '<rect x="2" y="' + (cy - 13) + '" width="128" height="26" fill="transparent" pointer-events="all"/>';
+    s += '<text x="12" y="' + (cy + 4) + '" fill="' + c + '" font-size="11" font-weight="700" text-anchor="middle" font-family="system-ui,sans-serif" pointer-events="none">' + axis.toUpperCase() + '</text>';
+    s += '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + rx + '" ry="9" fill="none" stroke="' + c + '" stroke-width="3"/>';
+    // ujung panah: penanda arah putar
+    s += '<polygon points="' + (cx + rx + 1) + ',' + cy + ' ' + (cx + rx - 8) + ',' + (cy - 5) + ' ' + (cx + rx - 8) + ',' + (cy + 5) + '" fill="' + c + '" pointer-events="none"/>';
     s += '</g>';
     return s;
+  }
+
+  // Tombol putar eksplisit per sumbu: ⟲ (berlawanan arah jarum jam) dan ⟳.
+  // Sengaja berupa HTML di luar <svg> agar kein ditelan area seret cincin.
+  function rotateButtonsHTML() {
+    return ROT_AXES.map(function (axis) {
+      var c = COLORS[axis];
+      var A = axis.toUpperCase();
+      return '<div class="gz-rrow">' +
+        '<span class="gz-rlab" style="color:' + c + '">' + A + '</span>' +
+        '<button type="button" class="gz-rbtn" data-axis="' + axis + '" data-dir="-1"' +
+        ' style="color:' + c + '" title="Putar sumbu ' + A + ' ke kiri" aria-label="Putar sumbu ' + A + ' ke kiri">⟲</button>' +
+        '<button type="button" class="gz-rbtn" data-axis="' + axis + '" data-dir="1"' +
+        ' style="color:' + c + '" title="Putar sumbu ' + A + ' ke kanan" aria-label="Putar sumbu ' + A + ' ke kanan">⟳</button>' +
+        '</div>';
+    }).join("");
   }
 
   function buildGizmoPanel(host, opts) {
@@ -55,19 +81,20 @@
     var mv = document.createElement("div");
     mv.className = "gz-sec";
     mv.innerHTML = '<div class="gz-title">Geser</div><div class="gz-hint">Seret panah</div>' +
-      '<svg class="gz-svg" width="120" height="120" viewBox="0 0 120 120">' +
+      '<svg class="gz-svg gz-mv-svg" width="120" height="120" viewBox="0 0 120 120">' +
       arrowSVG("x") + arrowSVG("y") + arrowSVG("z") + '</svg>';
     panel.appendChild(mv);
 
-    // --- Putar: cincin ---
+    // --- Putar: cincin bertumpuk + tombol per sumbu ---
     var rt = document.createElement("div");
     rt.className = "gz-sec";
-    rt.innerHTML = '<div class="gz-title">Putar</div><div class="gz-hint">Seret cincin</div>' +
-      '<svg class="gz-svg" width="140" height="90" viewBox="-70 -45 140 90">' +
-      '<g transform="translate(-42,0)">' + ringSVG("x") + '</g>' +
-      '<g transform="translate(0,0)">' + ringSVG("y") + '</g>' +
-      '<g transform="translate(42,0)">' + ringSVG("z") + '</g>' +
-      '</svg>';
+    rt.innerHTML = '<div class="gz-title">Putar</div><div class="gz-hint">Seret cincin / klik tombol</div>' +
+      '<div class="gz-rot-wrap">' +
+      '<svg class="gz-svg" width="132" height="84" viewBox="0 0 132 84" role="group" aria-label="Cincin putar sumbu X, Y, Z">' +
+      ringSVG("x", 0) + ringSVG("y", 1) + ringSVG("z", 2) +
+      '</svg>' +
+      '<div class="gz-rbtns" role="group" aria-label="Tombol putar per sumbu">' + rotateButtonsHTML() + '</div>' +
+      '</div>';
     panel.appendChild(rt);
 
     host.appendChild(panel);
@@ -97,8 +124,18 @@
       document.addEventListener("pointercancel", end);
     });
 
-    // ===== interaksi putar =====
-    var rtSvg = rt.querySelector("svg");
+    // ===== interaksi putar: tombol (utama, satu klik = satu langkah) =====
+    rt.addEventListener("click", function (e) {
+      var btn = e.target && e.target.closest ? e.target.closest(".gz-rbtn") : null;
+      if (!btn) return;
+      e.preventDefault();
+      var axis = btn.getAttribute("data-axis");
+      var dir = Number(btn.getAttribute("data-dir")) || 1;
+      if (opts.onRotate) opts.onRotate(axis, dir * ROT_STEP);
+    });
+
+    // ===== interaksi putar: seret cincin =====
+    var rtSvg = rt.querySelector(".gz-svg");
     rtSvg.addEventListener("pointerdown", function (e) {
       var g = e.target.closest ? e.target.closest(".gz-r") : null;
       if (!g) return;
@@ -127,6 +164,59 @@
 
   /* Controller: terapkan transformasi panel ke objek Three.js.
      Objek HANYA bergerak melalui fungsi-fungsi ini (tak ada interaksi latar). */
+  function isInTree(root, node) {
+    var p = node;
+    while (p) { if (p === root) return true; p = p.parent; }
+    return false;
+  }
+
+  /* ar.js memuat model dengan gltf.scene.clone(true). Pada Three r128, clone SkinnedMesh
+     tetap memakai Skeleton milik model sumber (tulang asli di luar clone). Akibatnya
+     matriks objek hasil clone dibatalkan saat skinning: geser/putar tidak terlihat.
+     Di sini skeleton diarahkan ke tulang hasil clone dan di-bind ulang pada pose saat ini,
+     sehingga transformasi panel benar-benar menggerakkan model. */
+  function repairSkinnedClones(root) {
+    if (!root || !root.traverse) return false;
+    var boneByName = {};
+    var repaired = false;
+    root.updateMatrixWorld(true);
+    root.traverse(function (o) {
+      if (o.isBone && o.name && !boneByName[o.name]) boneByName[o.name] = o;
+    });
+    root.traverse(function (mesh) {
+      if (!mesh.isSkinnedMesh || !mesh.skeleton) return;
+      var bones = mesh.skeleton.bones || [];
+      var shared = bones.some(function (b) { return b && !isInTree(root, b); });
+      if (!shared) return;
+      var mapped = bones.map(function (b) { return b && boneByName[b.name] ? boneByName[b.name] : null; });
+      if (mapped.some(function (b) { return !b; })) return; // nama tidak cocok: biarkan apa adanya
+      mesh.bind(new THREE.Skeleton(mapped));
+      repaired = true;
+    });
+    return repaired;
+  }
+
+  /* Model hasil clone yang baru diperbaiki bisa jauh lebih besar dari bingkai kamera
+     (transformasi root-nya dulu tidak pernah diterapkan). Perkecil hanya bila meluap,
+     agar seluruh model terlihat tanpa mengubah zoom/reset. */
+  function fitModelToCamera(root, camera) {
+    if (!camera || !camera.isPerspectiveCamera) return;
+    var box = new THREE.Box3(), size = new THREE.Vector3(), center = new THREE.Vector3();
+    for (var pass = 0; pass < 3; pass++) {
+      root.updateMatrixWorld(true);
+      box.setFromObject(root);
+      if (box.isEmpty()) return;
+      box.getSize(size);
+      box.getCenter(center);
+      var dist = camera.position.distanceTo(center);
+      var vh = 2 * dist * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+      var vw = vh * (camera.aspect || 1);
+      var fill = Math.max(size.x / vw, size.y / vh);
+      if (!isFinite(fill) || fill <= 0.5) return;
+      root.scale.multiplyScalar(0.5 / fill);
+    }
+  }
+
   function TransformController(object, camera, bounds) {
     bounds = bounds || {};
     var bnd = {
@@ -142,6 +232,7 @@
   TransformController.prototype.attach = function (object) {
     this.object = object;
     if (object) {
+      if (repairSkinnedClones(object) && this.camera) fitModelToCamera(object, this.camera);
       this._p0 = object.position.clone();
       this._q0 = object.quaternion.clone();
       this._s0 = object.scale.clone();
@@ -173,7 +264,10 @@
     var o = this.object;
     if (!o) return;
     var q = new THREE.Quaternion().setFromAxisAngle(AXIS[axis], amt);
-    o.quaternion.multiplyQuaternions(q, o.quaternion);
+    // Rotasi pada sumbu LOKAL objek: current * q (bukan q * current).
+    // Dengan q * current, objek berputar pada sumbu dunia sehingga sumbu yang
+    // dipilih tidak lagi sesuai label cincin setelah beberapa rotasi.
+    o.quaternion.multiply(q);
   };
 
   TransformController.prototype.onZoom = function (dir) {

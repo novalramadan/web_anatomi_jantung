@@ -35,7 +35,7 @@
     var p = staff ? null : Storage.load();
     var html = '<div class="mb-6"><div class="eyebrow mb-2"><span>Kuis</span></div><h1 class="mb-3">' + (staff ? 'Pratinjau Kuis' : 'Pilih Mode Kuis') + '</h1><p class="lead">' +
       (staff ? 'Mode dosen: pilihan jawaban tidak bisa dipilih dan skor tidak disimpan. Pilih pertemuan untuk melihat soal beserta kunci dan pembahasan.'
-             : 'Latihan atau Ujian (timer ' + window.CONFIG.timerUjianDetik + ' detik per soal). Kunci dan pembahasan tidak tampil saat mengerjakan, hanya setelah kuis selesai.') + '</p></div>';
+             : 'Latihan atau Ujian (timer ' + window.CONFIG.timerUjianDetik + ' detik per soal). Kunci dan pembahasan tidak ditampilkan; hasil akhir hanya berisi nilai.') + '</p></div>';
     if (staff) {
       html += '<div class="callout mb-4"><strong>Mode Dosen · Pratinjau</strong><p class="small mt-1">Pilihan jawaban tidak bisa dipilih dan skor tidak disimpan.</p></div>';
     }
@@ -332,31 +332,22 @@
     }
 
     var html = '<div class="mb-6"><div class="eyebrow mb-2"><span>Hasil Kuis</span></div><h1>' + (lulus ? 'Selamat, Lulus!' : 'Belum Mencapai Ambang') + '</h1></div>';
+    // Mahasiswa hanya melihat nilai: rincian jawaban benar/salah, kunci, dan
+    // pembahasan sengaja tidak dirender (dosen melihatnya di mode Pratinjau).
     html += '<div class="surface-card p-6 text-center"><div class="mb-1 text-5xl font-extrabold" style="color:' + (lulus ? 'var(--success)' : 'var(--danger)') + '">' + persen + '%</div>' +
-      '<p class="muted">' + benar + ' dari ' + total + ' soal benar · mode ' + state.mode + (state.judul ? ' · ' + App.escapeHtml(state.judul) : '') + '</p>' +
+      '<p class="muted">Nilai akhir · ' + total + ' soal · mode ' + state.mode + (state.judul ? ' · ' + App.escapeHtml(state.judul) : '') + '</p>' +
       '<div class="bar lg mx-auto mt-3" style="max-width:420px"><i style="width:' + persen + '%"></i></div>' +
-      '<p class="small dim mt-2">Ambang lulus: ' + Math.round(window.CONFIG.ambangLulus * 100) + '%</p></div>';
+      '<p class="small dim mt-2">Ambang lulus: ' + Math.round(window.CONFIG.ambangLulus * 100) + '%</p>' +
+      '<p class="small dim mt-1">Rincian jawaban benar/salah dan pembahasan tidak ditampilkan.</p></div>';
 
-    html += '<div class="surface-card mt-4 p-5"><h3 class="mb-3">Ringkasan per Pertemuan</h3><div class="table-wrap"><table><thead><tr><th>Pertemuan</th><th>Benar</th><th>Skor</th><th>Rekomendasi</th></tr></thead><tbody>';
+    html += '<div class="surface-card mt-4 p-5"><h3 class="mb-3">Skor per Pertemuan</h3><div class="table-wrap"><table><thead><tr><th>Pertemuan</th><th>Skor</th><th>Rekomendasi</th></tr></thead><tbody>';
     pids.sort(function (a, b) { return a - b; }).forEach(function (pid) {
       var d = perP[pid];
       var skor = App.pct(d.benar, d.total);
       var rec = skor >= 70 ? '<span class="badge badge-success">OK</span>' : '<a class="badge badge-warn no-underline" href="#/materi/' + pid + '">Ulangi P' + pid + '</a>';
-      html += '<tr><td>P' + pid + '</td><td>' + d.benar + '/' + d.total + '</td><td>' + skor + '%</td><td>' + rec + '</td></tr>';
+      html += '<tr><td>P' + pid + '</td><td>' + skor + '%</td><td>' + rec + '</td></tr>';
     });
     html += '</tbody></table></div></div>';
-
-    var salahList = state.soal.filter(function (s, i) { var j = state.jawaban[i]; return !j || !j.benar; });
-    if (salahList.length) {
-      html += '<div class="surface-card mt-4 p-5"><h3 class="mb-3">Soal Salah &amp; Pembahasan</h3>';
-      salahList.forEach(function (s) {
-        var j = state.jawaban[state.soal.indexOf(s)];
-        html += '<div class="callout c-red mb-3"><strong>Soal ' + s.id + ' (P' + s.pertemuan + ', ' + s.level + ')</strong><p>' + App.escapeHtml(s.pertanyaan) + '</p>' +
-          '<p class="small">Jawabanmu: <strong>' + (j && j.pilih ? j.pilih + '. ' + App.escapeHtml(s.opsi[j.pilih]) : 'tidak dijawab (waktu habis)') + '</strong><br>Kunci: <strong>' + s.kunci + '. ' + App.escapeHtml(s.opsi[s.kunci]) + '</strong></p>' +
-          '<p class="small">' + App.escapeHtml(s.pembahasan) + '</p></div>';
-      });
-      html += '</div>';
-    }
 
     html += '<div class="mt-5 flex flex-wrap gap-3"><button class="btn btn-primary" id="retryBtn" type="button">Ulangi Kuis Ini</button><a class="btn" href="#/kuis">Pilih Kuis Lain</a><a class="btn" href="#/beranda">Beranda</a></div>';
     app.innerHTML = html;

@@ -12,6 +12,18 @@
   var camGen = 0;
   var loadedKey = null;
 
+  // Status marker kamera: model hanya tampil selama QR marker terlihat.
+  // Grace 700 ms ≈ 3 kali scan (250 ms) agar satu-dua frame gagal-deteksi tidak berkedip.
+  var GRACE_MS = 700;
+  var RELOAD_COOLDOWN_MS = 5000;
+  var camOverlay = false;   // true hanya untuk overlay Three.js di mode kamera
+  var markerPresent = false;
+  var lastSeenAt = 0;
+  var loadingKey = null;
+  var failedKey = null;
+  var failedAt = 0;
+  var loadReq = 0;
+
   // ============================================================
   // Halaman AR utama
   // ============================================================
@@ -135,29 +147,88 @@
       var img = ctx.getImageData(0, 0, c2d.width, c2d.height);
       var code = jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
       if (code && code.data) onQRFound(code.data);
+      checkMarkerAbsence();
     }, 250);
   }
 
   function onQRFound(data) {
     var marker = window.DATA_MARKER.find(function (m) { return String(m.nilai_barcode) === data.trim(); });
     if (!marker) {
-      var st = document.getElementById("arStatus");
-      if (st) { st.textContent = "QR tidak dikenali: " + data; st.className = "ar-status err"; }
+      // QR asing tidak memperpanjang masa tampil marker yang sudah ada.
+      checkMarkerAbsence();
+      if (!markerPresent && !loadedKey) {
+        var st = document.getElementById("arStatus");
+        if (st) { st.textContent = "QR tidak dikenali: " + data; st.className = "ar-status err"; }
+      }
       return;
     }
-    var st2 = document.getElementById("arStatus");
-    if (st2) { st2.textContent = marker.nama + " ditemukan"; st2.className = "ar-status found"; }
-    // dedup: hanya muat ulang bila marker BERBEDA. Tanpa ini, scan tiap 250ms me-reset objek
-    if (loadedKey === String(marker.nilai_barcode) && model3d) return;
-    loadedKey = String(marker.nilai_barcode);
+    var key = String(marker.nilai_barcode);
+    markerPresent = true;
+    lastSeenAt = Date.now();
+
+    // Marker yang sama masih ter-cache: cukup tampilkan lagi, tanpa unduh ulang GLB.
+    if (loadedKey === key && model3d) {
+      if (!model3d.visible) showModelOverlay(marker);
+      return;
+    }
+    if (loadingKey === key) return; // GLB marker ini masih diunduh
+    if (failedKey === key && Date.now() - failedAt < RELOAD_COOLDOWN_MS) return;
+
+    // Marker berbeda: buang model lama agar scene tak pernah berisi dua model.
+    var stFound = document.getElementById("arStatus");
+    if (stFound) { stFound.textContent = marker.nama + " ditemukan"; stFound.className = "ar-status found"; }
+    clearOverlayModel();
+    loadedKey = key;
     showInfo(marker);
     loadModelToOverlay(marker);
+  }
+
+  // Tampilkan lagi model yang sudah dimuat (instan: model & transform tetap ter-cache).
+  function showModelOverlay(marker) {
+    if (!model3d || !marker) return;
+    model3d.visible = true;
+    var shell = document.getElementById("arView");
+    if (shell) shell.classList.add("with-model");
+    showInfo(marker);
+    var st = document.getElementById("arStatus");
+    if (st) { st.textContent = "Model " + marker.nama + " tampil"; st.className = "ar-status found"; }
+  }
+
+  // Sembunyikan seluruh overlay kamera, tetapi pertahankan model3d & loadedKey.
+  function hideModelOverlay() {
+    markerPresent = false;
+    if (model3d) model3d.visible = false;
+    var shell = document.getElementById("arView");
+    if (shell) shell.classList.remove("with-model");
+    var info = document.getElementById("arInfo");
+    if (info) info.classList.remove("show");
+    var body = document.getElementById("arInfoBody");
+    if (body) body.innerHTML = "";
+    var st = document.getElementById("arStatus");
+    if (st) { st.textContent = "Arahkan ke QR code marker…"; st.className = "ar-status"; }
+  }
+
+  // Dipanggil tiap siklus scan: sembunyikan setelah marker tak terlihat melewati grace.
+  function checkMarkerAbsence() {
+    if (!markerPresent) return;
+    if (Date.now() - lastSeenAt < GRACE_MS) return;
+    hideModelOverlay();
+  }
+
+  // Buang model aktif dari scene (dipakai saat berganti marker).
+  function clearOverlayModel() {
+    if (model3d && scene3d) scene3d.remove(model3d);
+    model3d = null;
+    if (ctrl) ctrl.attach(null);
+    var shell = document.getElementById("arView");
+    if (shell) shell.classList.remove("with-model");
   }
 
   // ============================================================
   // Three.js overlay di atas video
   // ============================================================
   function ensure3D() {
+    camOverlay = true;
     if (renderer) return;
     var gen = gen3d;
     var canvas = document.getElementById("glbCanvas");
@@ -249,26 +320,65 @@
   }
 
   function loadModelToOverlay(marker) {
+    var key = String(marker.nilai_barcode);
+    if (loadingKey === key) return; // cegah unduhan GLB ganda dari scan 250 ms
     if (!renderer) ensure3D();
     if (!renderer) { App.toast("Renderer 3D belum siap."); return; }
     var asset = marker.aset_3d || null;
-    if (!asset || !asset.file_glb) { App.toast("Marker belum memiliki aset GLB."); return; }
+    if (!asset || !asset.file_glb) {
+      failedKey = key;
+      failedAt = Date.now();
+      App.toast("Marker belum memiliki aset GLB.");
+      var st = document.getElementById("arStatus");
+      if (st) { st.textContent = "Marker belum memiliki aset GLB."; st.className = "ar-status err"; }
+      return;
+    }
+    var token = ++loadReq;
+    loadingKey = key;
+    failedKey = null;
     PB.fileUrl("aset_3d", asset.id, asset.file_glb).then(function (url) {
-      loadModelUrl(marker, url);
-    }).catch(function (err) { App.toast("Gagal membuat URL file: " + err.message); });
+      if (token !== loadReq) return;
+      loadModelUrl(marker, url, undefined, token);
+    }).catch(function (err) {
+      if (token !== loadReq) return;
+      loadingKey = null;
+      failedKey = key;
+      failedAt = Date.now();
+      App.toast("Gagal membuat URL file: " + err.message);
+    });
   }
 
-  function loadModelUrl(marker, url, gen) {
+  function loadModelUrl(marker, url, gen, token) {
     var cacheKey = marker.aset_3d ? marker.aset_3d.id : marker.model;
     var stale = function () { return gen !== undefined && gen !== gen3d; };
+    // Lepas penanda "sedang memuat" untuk jalur gagal yang tak lewat callback error.
+    var releaseCameraLoad = function () {
+      if (!camOverlay) return;
+      if (token !== loadReq || String(marker.nilai_barcode) !== loadedKey) return;
+      loadingKey = null;
+      failedKey = String(marker.nilai_barcode);
+      failedAt = Date.now();
+    };
     var finish = function (obj) {
       if (stale()) return;
+      if (camOverlay) {
+        // Hasil unduhan basi (marker sudah berganti / rute pindah) dibuang.
+        if (token !== loadReq || String(marker.nilai_barcode) !== loadedKey) return;
+        loadingKey = null;
+      }
+      if (model3d && scene3d) scene3d.remove(model3d);
       obj.scale.setScalar(1.6);
       obj.position.set(0, 0, 0);
       model3d = obj;
-      scene3d.add(obj);
+      if (scene3d) scene3d.add(obj);
       if (ctrl) ctrl.attach(obj);
       resize3D();
+      if (camOverlay) {
+        // GLB bisa selesai diunduh setelah marker keluar layar: tetap tersembunyi.
+        obj.visible = markerPresent;
+        if (markerPresent) showModelOverlay(marker);
+        return;
+      }
       var shell = document.getElementById("arView");
       if (shell) shell.classList.add("with-model");
       var st = document.getElementById("arStatus");
@@ -281,15 +391,16 @@
       if (window.THREE && THREE.GLTFLoader) gltfLoader = new THREE.GLTFLoader();
       else if (window.GLTFLoader) gltfLoader = new window.GLTFLoader();
     }
-    if (!gltfLoader) { App.toast("GLTFLoader belum dimuat. Periksa assets/lib/GLTFLoader.js"); return; }
+    if (!gltfLoader) { releaseCameraLoad(); App.toast("GLTFLoader belum dimuat. Periksa assets/lib/GLTFLoader.js"); return; }
     gltfLoader.load(url, function (gltf) {
       if (stale()) return;
       var root = gltf.scene || (gltf.scenes && gltf.scenes[0]);
-      if (!root) { App.toast("GLB tidak berisi scene."); return; }
+      if (!root) { releaseCameraLoad(); App.toast("GLB tidak berisi scene."); return; }
       glbCache[cacheKey] = root;
       finish(root.clone(true));
     }, function (progress) {
       if (stale()) return;
+      if (camOverlay && (token !== loadReq || !markerPresent)) return;
       if (progress.total) {
         var pct = Math.round(progress.loaded / progress.total * 100);
         var st2 = document.getElementById("arStatus");
@@ -299,10 +410,18 @@
       }
     }, function (err) {
       if (stale()) return;
+      if (camOverlay) {
+        if (token !== loadReq || String(marker.nilai_barcode) !== loadedKey) return;
+        loadingKey = null;
+        failedKey = String(marker.nilai_barcode);
+        failedAt = Date.now();
+      }
       console.error("Gagal load GLB:", err);
       App.toast("Gagal memuat GLB: " + url);
-      var st3 = document.getElementById("arStatus");
-      if (st3) { st3.textContent = "Gagal memuat model"; st3.className = "ar-status err"; }
+      if (!camOverlay) {
+        var st3 = document.getElementById("arStatus");
+        if (st3) { st3.textContent = "Gagal memuat model"; st3.className = "ar-status err"; }
+      }
       var ms2 = document.getElementById("modelStatus");
       if (ms2) ms2.textContent = "Gagal memuat model. Periksa koneksi file.";
     });
@@ -311,6 +430,14 @@
   function dispose3D() {
     gen3d++;
     ctrl = null;
+    loadReq++; // batalkan unduhan GLB kamera yang masih berjalan
+    camOverlay = false;
+    loadedKey = null;
+    loadingKey = null;
+    failedKey = null;
+    failedAt = 0;
+    markerPresent = false;
+    lastSeenAt = 0;
     if (model3d && scene3d) { scene3d.remove(model3d); model3d = null; }
     if (renderer) { renderer.dispose(); renderer = null; scene3d = null; camera3d = null; }
   }
@@ -318,6 +445,9 @@
   function stopCamera() {
     camGen++; // pembatalan: callback getUserMedia lama jadi basi
     clearInterval(scanTimer);
+    scanTimer = null;
+    if (camOverlay) hideModelOverlay();
+    lastSeenAt = 0;
     if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
     if (video) { video.srcObject = null; }
   }

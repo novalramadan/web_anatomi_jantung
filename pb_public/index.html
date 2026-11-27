@@ -349,24 +349,24 @@
     </div>
   </footer>
 
-  <script src="js/config.js?v=20261128a"></script>
-  <script src="js/pb.js?v=20261128a"></script>
-  <script src="js/app.js?v=20261128a"></script>
-  <script src="js/home.js?v=20261128a"></script>
-  <script src="js/materi.js?v=20261128a"></script>
-  <script src="js/kuis.js?v=20261128a"></script>
-  <script src="js/vn.js?v=20261128a"></script>
-  <script src="js/ar.js?v=20261128a"></script>
-  <script src="js/profil.js?v=20261128a"></script>
-  <script src="js/statistik.js?v=20261128a"></script>
+  <script src="js/config.js?v=20261128b"></script>
+  <script src="js/pb.js?v=20261128b"></script>
+  <script src="js/app.js?v=20261128b"></script>
+  <script src="js/home.js?v=20261128b"></script>
+  <script src="js/materi.js?v=20261128b"></script>
+  <script src="js/kuis.js?v=20261128b"></script>
+  <script src="js/vn.js?v=20261128b"></script>
+  <script src="js/ar.js?v=20261128b"></script>
+  <script src="js/profil.js?v=20261128b"></script>
+  <script src="js/statistik.js?v=20261128b"></script>
   <script src="assets/lib/three.min.js"></script>
   <script src="assets/lib/GLTFLoader.js"></script>
-  <script src="js/gizmo.js?v=20261128a"></script>
-  <script src="js/anatomy3d.js?v=20261128a"></script>
+  <script src="js/gizmo.js?v=20261128b"></script>
+  <script src="js/anatomy3d.js?v=20261128b"></script>
   <script src="assets/lib/jsQR.js"></script>
   <script src="assets/lib/qrcodegen.js"></script>
-  <script src="js/login.js?v=20261128a"></script>
-  <script src="js/admin.js?v=20261128a"></script>
+  <script src="js/login.js?v=20261128b"></script>
+  <script src="js/admin.js?v=20261128b"></script>
 
   <!-- Gaya kecil yang bergantung tema & butuh CSS murni (bukan utility) -->
   <style>
@@ -582,6 +582,36 @@
     .gz-svg .gz-h:hover { opacity: 1; }
     .gz-svg .gz-r { opacity: .85; transition: opacity .12s ease; }
     .gz-svg .gz-r:hover { opacity: 1; }
+    /* putar: cincin di kiri, tombol ⟲/⟳ per sumbu di kanan */
+    .gz-rot-wrap { display: flex; align-items: center; gap: .4rem; }
+    .gz-rbtns { display: flex; flex-direction: column; gap: 3px; }
+    .gz-rrow { display: flex; align-items: center; gap: 3px; height: 26px; }
+    .gz-rlab { width: 12px; text-align: center; font-size: 11px; font-weight: 800; line-height: 1; }
+    .gz-rbtn { width: 27px; height: 26px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid currentColor; border-radius: .45rem; background: color-mix(in srgb, var(--surface) 92%, transparent); font-size: 1.05rem; line-height: 1; cursor: pointer; touch-action: manipulation; }
+    .gz-rbtn:hover { background: color-mix(in srgb, currentColor 14%, var(--surface)); }
+    .gz-rbtn:active { transform: scale(.93); }
+    .gz-rbtn:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
+    /* ponsel: panel kamera dipindah ke bawah tombol ganti kamera agar tidak menutupinya,
+       dan kontrol dikecilkan agar seluruh tombol putar tetap terlihat di dalam video. */
+    @media (max-width: 640px) {
+      #gzPanel { top: 120px !important; }
+      .gz-ctrl { padding: 8px; gap: 6px; }
+      .gz-mv-svg { width: 100px; height: 100px; }
+      .gz-rot-wrap { gap: 5px; }
+      .gz-rot-wrap .gz-svg { width: 120px; height: 76px; }
+      .gz-title { font-size: 11px; }
+      .gz-hint { font-size: 10px; }
+      .gz-rbtn { width: 26px; height: 24px; font-size: .95rem; }
+      .gz-rrow { height: 24px; }
+      /* Mode 3D di ponsel: panel jadi bar bawah agar model tetap terlihat,
+         bukan menutupi tengah viewer. */
+      #gzPanel2 { left: 8px; right: 8px; top: auto !important; bottom: 8px; }
+      #gzPanel2 .gz-ctrl { flex-direction: row; align-items: center; justify-content: center; gap: 8px; padding: 8px; }
+      #gzPanel2 .gz-mv-svg { width: 84px; height: 84px; }
+      #gzPanel2 .gz-rot-wrap .gz-svg { width: 116px; height: 62px; }
+      #gzPanel2 .gz-rbtn { width: 26px; height: 23px; }
+      #gzPanel2 .gz-rrow { height: 23px; }
+    }
 
     .ar-shell.with-model .ar-info { width: min(340px, 60%); bottom: 12px; left: 12px; right: auto; transform: translateY(0); border-radius: .9rem; border: 1px solid var(--line-2); }
     .ar-shell.with-model .ar-info.show { transform: translateY(0); }
